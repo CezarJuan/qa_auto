@@ -27,3 +27,6 @@ env/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Resultados das avaliações (a linha de base fica em docs/avaliacao/)
+resultados/

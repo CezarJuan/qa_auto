@@ -1,0 +1,75 @@
+id: assinatura-streaming
+dominio: assinaturas
+conjunto: desenvolvimento
+historia: |-
+  Como assinante,
+  Quero gerenciar minha assinatura do serviço de streaming,
+  Para assistir aos conteúdos.
+criterios:
+  1: Novos assinantes têm 7 dias de teste gratuito antes da primeira cobrança.
+  2: Ao fim do teste, a cobrança é feita e a assinatura fica ativa se o pagamento for aprovado.
+  3: Se a cobrança falhar 3 vezes seguidas, a assinatura é suspensa.
+  4: O assinante pode cancelar a qualquer momento.
+
+gabarito:
+  analise: >-
+    Critério 1: o assinante começa no período de teste, e o fim do teste leva à cobrança. Critério 2: cobrança
+    aprovada ativa a assinatura. Critério 3: a variável de estado falhas_cobranca conta recusas; na terceira,
+    a assinatura é suspensa. Critério 4: cancelar é aceito no teste, na cobrança e com a assinatura ativa.
+  variaveis:
+    - {nome: falhas_cobranca, tipo: inteiro, categoria: estado, valor_inicial: 0}
+  estados:
+    - {id: Teste, rotulo: Período de teste, tipo: inicial}
+    - {id: AguardandoCobranca, rotulo: Aguardando cobrança, tipo: intermediario}
+    - {id: Ativa, rotulo: Assinatura ativa, tipo: intermediario}
+    - {id: Suspensa, rotulo: Assinatura suspensa, tipo: final}
+    - {id: Cancelada, rotulo: Assinatura cancelada, tipo: final}
+  transicoes:
+    - {id: T1, de: Teste, evento: fim_do_teste, para: AguardandoCobranca, guarda: null, acoes: [], criterios: [1]}
+    - {id: T2, de: AguardandoCobranca, evento: cobranca_aprovada, para: Ativa, guarda: null, acoes: [falhas_cobranca = 0], criterios: [2]}
+    - {id: T3, de: AguardandoCobranca, evento: cobranca_recusada, para: AguardandoCobranca, guarda: falhas_cobranca < 2, acoes: [falhas_cobranca += 1], criterios: [3]}
+    - {id: T4, de: AguardandoCobranca, evento: cobranca_recusada, para: Suspensa, guarda: falhas_cobranca >= 2, acoes: [falhas_cobranca += 1], criterios: [3]}
+    - {id: T5, de: Teste, evento: cancelar, para: Cancelada, guarda: null, acoes: [], criterios: [4]}
+    - {id: T6, de: AguardandoCobranca, evento: cancelar, para: Cancelada, guarda: null, acoes: [], criterios: [4]}
+    - {id: T7, de: Ativa, evento: cancelar, para: Cancelada, guarda: null, acoes: [], criterios: [4]}
+
+sinonimos:
+  estados:
+    Teste: [PeriodoTeste, TesteGratuito, EmTeste]
+    AguardandoCobranca: [Cobrando, CobrancaPendente, EmCobranca]
+    Ativa: [AssinaturaAtiva]
+    Suspensa: [AssinaturaSuspensa]
+    Cancelada: [AssinaturaCancelada]
+  eventos:
+    fim_do_teste: [terminar_teste, encerrar_teste, teste_expirado]
+    cobranca_aprovada: [pagamento_aprovado, cobrar_com_sucesso]
+    cobranca_recusada: [pagamento_recusado, falha_cobranca, cobranca_falhou]
+    cancelar: [cancelar_assinatura]
+  variaveis:
+    falhas_cobranca: [tentativas, tentativas_cobranca, falhas]
+
+propriedades:
+  - criterio: 1
+    descricao: O fim do teste leva à cobrança
+    eventos: [{evento: fim_do_teste}]
+    estado_esperado: AguardandoCobranca
+  - criterio: 2
+    descricao: Cobrança aprovada ativa a assinatura
+    eventos: [{evento: fim_do_teste}, {evento: cobranca_aprovada}]
+    estado_esperado: Ativa
+  - criterio: 3
+    descricao: Duas recusas ainda não suspendem
+    eventos: [{evento: fim_do_teste}, {evento: cobranca_recusada}, {evento: cobranca_recusada}]
+    estado_esperado: AguardandoCobranca
+  - criterio: 3
+    descricao: Três recusas seguidas suspendem
+    eventos: [{evento: fim_do_teste}, {evento: cobranca_recusada}, {evento: cobranca_recusada}, {evento: cobranca_recusada}]
+    estado_esperado: Suspensa
+  - criterio: 4
+    descricao: É possível cancelar durante o teste
+    eventos: [{evento: cancelar}]
+    estado_esperado: Cancelada
+  - criterio: 4
+    descricao: É possível cancelar a assinatura ativa
+    eventos: [{evento: fim_do_teste}, {evento: cobranca_aprovada}, {evento: cancelar}]
+    estado_esperado: Cancelada

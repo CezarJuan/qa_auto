@@ -1,0 +1,45 @@
+# Autenticação MFA com bloqueio após 3 tentativas (canônico do 5W2H). Gabarito em exemplos/mfa-bloqueio.json.
+id: mfa-bloqueio
+dominio: seguranca
+conjunto: teste
+origem: exemplo:mfa-bloqueio
+
+sinonimos:
+  estados:
+    AguardandoSenha: [Inicio, Deslogado, AguardandoLogin, TelaDeLogin]
+    AguardandoCodigo: [AguardandoMfa, AguardandoToken, ValidandoCodigo, AguardandoVerificacao]
+    Autenticado: [AcessoLiberado, Logado, ContaAcessada]
+    Bloqueado: [AcessoBloqueado, ContaBloqueada]
+  eventos:
+    senha_correta: [senha_valida, informar_senha_correta]
+    senha_incorreta: [senha_invalida, informar_senha_incorreta]
+    codigo_correto: [token_valido, codigo_valido, informar_codigo_correto]
+    codigo_incorreto: [token_invalido, codigo_invalido, informar_codigo_incorreto]
+  variaveis:
+    tentativas: [tentativas_codigo, erros_codigo, codigos_incorretos]
+
+propriedades:
+  - criterio: 1
+    descricao: Senha correta leva à etapa do código
+    eventos: [{evento: senha_correta}]
+    estado_esperado: AguardandoCodigo
+  - criterio: 2
+    descricao: Código correto libera o acesso
+    eventos: [{evento: senha_correta}, {evento: codigo_correto}]
+    estado_esperado: Autenticado
+  - criterio: 3
+    descricao: Um código incorreto permite nova tentativa
+    eventos: [{evento: senha_correta}, {evento: codigo_incorreto}]
+    estado_esperado: AguardandoCodigo
+  - criterio: 3
+    descricao: Depois de um erro, o código correto ainda autentica
+    eventos: [{evento: senha_correta}, {evento: codigo_incorreto}, {evento: codigo_correto}]
+    estado_esperado: Autenticado
+  - criterio: 4
+    descricao: Dois códigos incorretos ainda não bloqueiam
+    eventos: [{evento: senha_correta}, {evento: codigo_incorreto}, {evento: codigo_incorreto}]
+    estado_esperado: AguardandoCodigo
+  - criterio: 4
+    descricao: Três códigos incorretos seguidos bloqueiam
+    eventos: [{evento: senha_correta}, {evento: codigo_incorreto}, {evento: codigo_incorreto}, {evento: codigo_incorreto}]
+    estado_esperado: Bloqueado

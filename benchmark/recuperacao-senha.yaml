@@ -1,0 +1,78 @@
+id: recuperacao-senha
+dominio: seguranca
+conjunto: desenvolvimento
+historia: |-
+  Como usuário,
+  Quero recuperar minha senha por e-mail,
+  Para voltar a acessar minha conta.
+criterios:
+  1: O usuário informa o e-mail cadastrado e recebe um link de recuperação.
+  2: O link expira após 1 hora.
+  3: A nova senha deve ter no mínimo 8 caracteres.
+  4: Após redefinir a senha, o link não pode ser usado novamente.
+
+gabarito:
+  analise: >-
+    Critério 1: só e-mail cadastrado gera o link. Critério 2: com mais de 60 minutos o link expira. Critério 3:
+    a redefinição exige tamanho_senha >= 8; senha curta é recusada e o link continua válido. Critério 4:
+    depois de redefinida, o fluxo termina e o link não aceita novo uso.
+  variaveis:
+    - {nome: email_cadastrado, tipo: booleano, categoria: entrada, valor_inicial: null}
+    - {nome: minutos_desde_envio, tipo: inteiro, categoria: contexto, valor_inicial: null}
+    - {nome: tamanho_senha, tipo: inteiro, categoria: entrada, valor_inicial: null}
+  estados:
+    - {id: Inicio, rotulo: Solicitação de recuperação, tipo: inicial}
+    - {id: LinkEnviado, rotulo: Link enviado, tipo: intermediario}
+    - {id: SenhaRedefinida, rotulo: Senha redefinida, tipo: final}
+    - {id: LinkExpirado, rotulo: Link expirado, tipo: final}
+  transicoes:
+    - {id: T1, de: Inicio, evento: solicitar_recuperacao, para: LinkEnviado, guarda: email_cadastrado, acoes: [], criterios: [1]}
+    - {id: T2, de: LinkEnviado, evento: redefinir_senha, para: SenhaRedefinida, guarda: minutos_desde_envio <= 60 e tamanho_senha >= 8, acoes: [], criterios: [2, 3, 4]}
+    - {id: T3, de: LinkEnviado, evento: redefinir_senha, para: LinkExpirado, guarda: minutos_desde_envio > 60, acoes: [], criterios: [2]}
+
+sinonimos:
+  estados:
+    Inicio: [AguardandoEmail, EsqueciSenha]
+    LinkEnviado: [EmailEnviado, AguardandoRedefinicao]
+    SenhaRedefinida: [SenhaAlterada, Redefinida]
+    LinkExpirado: [Expirado]
+  eventos:
+    solicitar_recuperacao: [informar_email, enviar_link, recuperar_senha]
+    redefinir_senha: [definir_nova_senha, alterar_senha, usar_link]
+  variaveis:
+    email_cadastrado: [email_valido, email_existe]
+    minutos_desde_envio: [minutos_decorridos, tempo_desde_envio]
+    tamanho_senha: [comprimento_senha, tamanho_nova_senha]
+
+propriedades:
+  - criterio: 1
+    descricao: E-mail cadastrado recebe o link
+    eventos: [{evento: solicitar_recuperacao, dados: {email_cadastrado: true}}]
+    estado_esperado: LinkEnviado
+  - criterio: 1
+    descricao: E-mail não cadastrado não recebe link
+    eventos: [{evento: solicitar_recuperacao, dados: {email_cadastrado: false}}]
+    recusado: true
+    estado_esperado: Inicio
+  - criterio: 2
+    descricao: Link usado depois de 90 minutos está expirado
+    contexto: {minutos_desde_envio: 90}
+    eventos: [{evento: solicitar_recuperacao, dados: {email_cadastrado: true}}, {evento: redefinir_senha, dados: {tamanho_senha: 10}}]
+    estado_esperado: LinkExpirado
+  - criterio: 3
+    descricao: Senha de 6 caracteres é recusada
+    contexto: {minutos_desde_envio: 10}
+    eventos: [{evento: solicitar_recuperacao, dados: {email_cadastrado: true}}, {evento: redefinir_senha, dados: {tamanho_senha: 6}}]
+    recusado: true
+    estado_esperado: LinkEnviado
+  - criterio: 3
+    descricao: Senha de 8 caracteres é aceita
+    contexto: {minutos_desde_envio: 10}
+    eventos: [{evento: solicitar_recuperacao, dados: {email_cadastrado: true}}, {evento: redefinir_senha, dados: {tamanho_senha: 8}}]
+    estado_esperado: SenhaRedefinida
+  - criterio: 4
+    descricao: O link não pode ser usado de novo
+    contexto: {minutos_desde_envio: 10}
+    eventos: [{evento: solicitar_recuperacao, dados: {email_cadastrado: true}}, {evento: redefinir_senha, dados: {tamanho_senha: 10}}, {evento: redefinir_senha, dados: {tamanho_senha: 10}}]
+    recusado: true
+    estado_esperado: SenhaRedefinida

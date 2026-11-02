@@ -1,0 +1,78 @@
+id: chamado-suporte
+dominio: suporte
+conjunto: teste
+historia: |-
+  Como cliente,
+  Quero abrir um chamado de suporte,
+  Para resolver problemas com o produto.
+criterios:
+  1: Ao abrir um chamado, ele fica aberto aguardando atendimento.
+  2: Quando um atendente assume o chamado, ele passa para em atendimento.
+  3: O chamado só pode ser fechado depois de resolvido.
+  4: O cliente pode reabrir um chamado resolvido em até 7 dias.
+
+gabarito:
+  analise: >-
+    Critério 1: abrir leva a Aberto. Critério 2: assumir leva a EmAtendimento. Critério 3: só há transição de
+    fechar a partir de Resolvido. Critério 4: reabrir um chamado resolvido só vale com
+    dias_desde_resolucao <= 7.
+  variaveis:
+    - {nome: dias_desde_resolucao, tipo: inteiro, categoria: contexto, valor_inicial: null}
+  estados:
+    - {id: SemChamado, rotulo: Sem chamado, tipo: inicial}
+    - {id: Aberto, rotulo: Aberto, tipo: intermediario}
+    - {id: EmAtendimento, rotulo: Em atendimento, tipo: intermediario}
+    - {id: Resolvido, rotulo: Resolvido, tipo: intermediario}
+    - {id: Fechado, rotulo: Fechado, tipo: final}
+  transicoes:
+    - {id: T1, de: SemChamado, evento: abrir_chamado, para: Aberto, guarda: null, acoes: [], criterios: [1]}
+    - {id: T2, de: Aberto, evento: assumir, para: EmAtendimento, guarda: null, acoes: [], criterios: [2]}
+    - {id: T3, de: EmAtendimento, evento: resolver, para: Resolvido, guarda: null, acoes: [], criterios: []}
+    - {id: T4, de: Resolvido, evento: fechar, para: Fechado, guarda: null, acoes: [], criterios: [3]}
+    - {id: T5, de: Resolvido, evento: reabrir, para: Aberto, guarda: dias_desde_resolucao <= 7, acoes: [], criterios: [4]}
+
+sinonimos:
+  estados:
+    SemChamado: [Inicio, Novo]
+    Aberto: [ChamadoAberto, AguardandoAtendimento]
+    EmAtendimento: [Atendimento, EmAndamento]
+    Resolvido: [ChamadoResolvido, Solucionado]
+    Fechado: [ChamadoFechado, Encerrado]
+  eventos:
+    abrir_chamado: [abrir, criar_chamado, registrar_chamado]
+    assumir: [assumir_chamado, iniciar_atendimento, atender]
+    resolver: [resolver_chamado, solucionar]
+    fechar: [fechar_chamado, encerrar]
+    reabrir: [reabrir_chamado]
+  variaveis:
+    dias_desde_resolucao: [dias_apos_resolucao, dias_resolvido]
+
+propriedades:
+  - criterio: 1
+    descricao: Abrir o chamado deixa-o aberto
+    eventos: [{evento: abrir_chamado}]
+    estado_esperado: Aberto
+  - criterio: 2
+    descricao: Assumir o chamado leva ao atendimento
+    eventos: [{evento: abrir_chamado}, {evento: assumir}]
+    estado_esperado: EmAtendimento
+  - criterio: 3
+    descricao: Fechar um chamado ainda aberto é recusado
+    eventos: [{evento: abrir_chamado}, {evento: fechar}]
+    recusado: true
+    estado_esperado: Aberto
+  - criterio: 3
+    descricao: Chamado resolvido pode ser fechado
+    eventos: [{evento: abrir_chamado}, {evento: assumir}, {evento: resolver}, {evento: fechar}]
+    estado_esperado: Fechado
+  - criterio: 4
+    descricao: Reabrir 3 dias após a resolução é permitido
+    contexto: {dias_desde_resolucao: 3}
+    eventos: [{evento: abrir_chamado}, {evento: assumir}, {evento: resolver}, {evento: reabrir}]
+    estado_esperado: Aberto
+  - criterio: 4
+    descricao: Reabrir 10 dias após a resolução é recusado
+    contexto: {dias_desde_resolucao: 10}
+    eventos: [{evento: abrir_chamado}, {evento: assumir}, {evento: resolver}, {evento: reabrir}]
+    recusado: true
+    estado_esperado: Resolvido

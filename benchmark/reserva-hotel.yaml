@@ -1,0 +1,92 @@
+id: reserva-hotel
+dominio: hotelaria
+conjunto: teste
+historia: |-
+  Como hóspede,
+  Quero reservar um quarto de hotel pelo site,
+  Para garantir minha hospedagem.
+criterios:
+  1: O hóspede seleciona as datas e, se houver quarto disponível, a reserva fica pendente de pagamento.
+  2: A reserva é confirmada quando o pagamento é aprovado.
+  3: Se o pagamento não for feito em até 2 horas, a reserva expira.
+  4: Reservas confirmadas podem ser canceladas sem custo até 7 dias antes do check-in.
+
+gabarito:
+  analise: >-
+    Critério 1: selecionar datas só cria a reserva pendente se quartos_disponiveis > 0. Critério 2: pagamento
+    aprovado confirma. Critério 3: o fim do prazo de 2 horas expira a reserva pendente. Critério 4: cancelar
+    uma reserva confirmada só é permitido com dias_ate_checkin >= 7.
+  variaveis:
+    - {nome: quartos_disponiveis, tipo: inteiro, categoria: contexto, valor_inicial: null}
+    - {nome: dias_ate_checkin, tipo: inteiro, categoria: contexto, valor_inicial: null}
+  estados:
+    - {id: Pesquisando, rotulo: Pesquisando quartos, tipo: inicial}
+    - {id: PendentePagamento, rotulo: Pendente de pagamento, tipo: intermediario}
+    - {id: Confirmada, rotulo: Reserva confirmada, tipo: intermediario}
+    - {id: Expirada, rotulo: Reserva expirada, tipo: final}
+    - {id: Cancelada, rotulo: Reserva cancelada, tipo: final}
+    - {id: Hospedado, rotulo: Check-in realizado, tipo: final}
+  transicoes:
+    - {id: T1, de: Pesquisando, evento: selecionar_datas, para: PendentePagamento, guarda: quartos_disponiveis > 0, acoes: [], criterios: [1]}
+    - {id: T2, de: PendentePagamento, evento: pagamento_aprovado, para: Confirmada, guarda: null, acoes: [], criterios: [2]}
+    - {id: T3, de: PendentePagamento, evento: prazo_expirado, para: Expirada, guarda: null, acoes: [], criterios: [3]}
+    - {id: T4, de: Confirmada, evento: cancelar, para: Cancelada, guarda: dias_ate_checkin >= 7, acoes: [], criterios: [4]}
+    - {id: T5, de: Confirmada, evento: fazer_checkin, para: Hospedado, guarda: null, acoes: [], criterios: []}
+
+sinonimos:
+  estados:
+    Pesquisando: [Inicio, SelecionandoDatas, Busca]
+    PendentePagamento: [AguardandoPagamento, ReservaPendente, Pendente]
+    Confirmada: [ReservaConfirmada]
+    Expirada: [ReservaExpirada]
+    Cancelada: [ReservaCancelada]
+    Hospedado: [CheckinRealizado, Hospedagem]
+  eventos:
+    selecionar_datas: [reservar, escolher_datas, criar_reserva]
+    pagamento_aprovado: [aprovar_pagamento, confirmar_pagamento, pagar]
+    prazo_expirado: [expirar, expirar_reserva, tempo_esgotado]
+    cancelar: [cancelar_reserva]
+    fazer_checkin: [checkin, realizar_checkin]
+  variaveis:
+    quartos_disponiveis: [vagas, quartos_livres, disponibilidade]
+    dias_ate_checkin: [antecedencia_dias, dias_para_checkin]
+
+propriedades:
+  - criterio: 1
+    descricao: Com quarto disponível a reserva fica pendente
+    contexto: {quartos_disponiveis: 3, dias_ate_checkin: 10}
+    eventos: [{evento: selecionar_datas}]
+    estado_esperado: PendentePagamento
+  - criterio: 1
+    descricao: Sem quarto disponível a reserva não é criada
+    contexto: {quartos_disponiveis: 0, dias_ate_checkin: 10}
+    eventos: [{evento: selecionar_datas}]
+    recusado: true
+    estado_esperado: Pesquisando
+  - criterio: 2
+    descricao: Pagamento aprovado confirma a reserva
+    contexto: {quartos_disponiveis: 3, dias_ate_checkin: 10}
+    eventos: [{evento: selecionar_datas}, {evento: pagamento_aprovado}]
+    estado_esperado: Confirmada
+  - criterio: 3
+    descricao: Fim do prazo expira a reserva pendente
+    contexto: {quartos_disponiveis: 3, dias_ate_checkin: 10}
+    eventos: [{evento: selecionar_datas}, {evento: prazo_expirado}]
+    estado_esperado: Expirada
+  - criterio: 3
+    descricao: Pagamento depois de expirar é recusado
+    contexto: {quartos_disponiveis: 3, dias_ate_checkin: 10}
+    eventos: [{evento: selecionar_datas}, {evento: prazo_expirado}, {evento: pagamento_aprovado}]
+    recusado: true
+    estado_esperado: Expirada
+  - criterio: 4
+    descricao: Cancelar com 10 dias de antecedência é permitido
+    contexto: {quartos_disponiveis: 3, dias_ate_checkin: 10}
+    eventos: [{evento: selecionar_datas}, {evento: pagamento_aprovado}, {evento: cancelar}]
+    estado_esperado: Cancelada
+  - criterio: 4
+    descricao: Cancelar com 3 dias de antecedência é recusado
+    contexto: {quartos_disponiveis: 3, dias_ate_checkin: 3}
+    eventos: [{evento: selecionar_datas}, {evento: pagamento_aprovado}, {evento: cancelar}]
+    recusado: true
+    estado_esperado: Confirmada

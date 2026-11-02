@@ -1,0 +1,36 @@
+{
+  "caso": "chamado-suporte",
+  "conjunto": "teste",
+  "rodada": 3,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 122.72,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '\"AAAA-MM-DD\"' de 'data_abertura' não é do tipo data.\n- [esquema_invalido] variaveis.1: O valor_inicial '\"AAAA-MM-DD\"' de 'data_atual' não é do tipo data.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 37.80002830000012,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '' de 'data_abertura' não é do tipo data.\n- [esquema_invalido] variaveis.1: O valor_inicial '' de 'data_atual' não é do tipo data."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 41.24361580000186,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial 'AAAA-MM-DD' de 'data_abertura' não é do tipo data.\n- [esquema_invalido] variaveis.1: O valor_inicial 'AAAA-MM-DD' de 'data_atual' não é do tipo data."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 43.672482500001934,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '\"AAAA-MM-DD\"' de 'data_abertura' não é do tipo data.\n- [esquema_invalido] variaveis.1: O valor_inicial '\"AAAA-MM-DD\"' de 'data_atual' não é do tipo data."
+    }
+  ],
+  "modelo": null
+}

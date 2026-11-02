@@ -1,0 +1,41 @@
+# Carrinho de compras. Gabarito em exemplos/carrinho.json.
+id: carrinho
+dominio: ecommerce
+conjunto: desenvolvimento
+origem: exemplo:carrinho
+
+sinonimos:
+  estados:
+    CarrinhoVazio: [Vazio, CarrinhoSemItens]
+    CarrinhoComItens: [ComItens, CarrinhoPreenchido, CarrinhoAtivo]
+    Pagamento: [AguardandoPagamento, Checkout, EtapaPagamento]
+  eventos:
+    adicionar_item: [adicionar_produto, adicionar, incluir_item]
+    remover_item: [remover_produto, remover, excluir_item]
+    finalizar_compra: [finalizar, checkout, fechar_pedido]
+  variaveis:
+    itens: [quantidade_itens, qtd_itens, total_itens, quantidade]
+
+propriedades:
+  - criterio: 1
+    descricao: Adicionar ao carrinho vazio deixa o carrinho com itens
+    eventos: [{evento: adicionar_item}]
+    estado_esperado: CarrinhoComItens
+  - criterio: 2
+    descricao: Remover o último item esvazia o carrinho
+    eventos: [{evento: adicionar_item}, {evento: remover_item}]
+    estado_esperado: CarrinhoVazio
+  - criterio: 2
+    descricao: Remover um de dois itens mantém o carrinho com itens
+    eventos: [{evento: adicionar_item}, {evento: adicionar_item}, {evento: remover_item}]
+    estado_esperado: CarrinhoComItens
+  # Erro do explore: dava para finalizar a compra com o carrinho vazio
+  - criterio: 3
+    descricao: Finalizar com o carrinho vazio é recusado
+    eventos: [{evento: finalizar_compra}]
+    recusado: true
+    estado_esperado: CarrinhoVazio
+  - criterio: 4
+    descricao: Finalizar com itens leva ao pagamento
+    eventos: [{evento: adicionar_item}, {evento: finalizar_compra}]
+    estado_esperado: Pagamento

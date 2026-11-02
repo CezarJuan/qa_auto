@@ -1,0 +1,35 @@
+# Login bancário com catálogo (sistema exemplo). Mede se o LLM segue o catálogo e conta tentativas por estados.
+# É também o exemplo resolvido do prompt, por isso fica no conjunto de desenvolvimento.
+id: login
+dominio: bancario
+conjunto: desenvolvimento
+origem: sistema:login
+
+sinonimos:
+  estados:
+    SemFalha: [Deslogado, Inicio]
+    Dashboard: [Autenticado, Painel, Logado]
+    ContaBloqueada: [Bloqueada, Bloqueado]
+
+propriedades:
+  - criterio: 1
+    descricao: Senha correta leva ao Dashboard
+    eventos: [{evento: senha_correta}]
+    estado_esperado: Dashboard
+  - criterio: 1
+    descricao: Senha correta depois de duas falhas ainda entra
+    eventos: [{evento: senha_incorreta}, {evento: senha_incorreta}, {evento: senha_correta}]
+    estado_esperado: Dashboard
+  - criterio: 2
+    descricao: Uma senha errada não bloqueia
+    eventos: [{evento: senha_incorreta}]
+    estado_esperado: UmaFalha
+  - criterio: 3
+    descricao: Três senhas erradas bloqueiam a conta
+    eventos: [{evento: senha_incorreta}, {evento: senha_incorreta}, {evento: senha_incorreta}]
+    estado_esperado: ContaBloqueada
+  - criterio: 3
+    descricao: Conta bloqueada recusa a senha correta
+    eventos: [{evento: senha_incorreta}, {evento: senha_incorreta}, {evento: senha_incorreta}, {evento: senha_correta}]
+    recusado: true
+    estado_esperado: ContaBloqueada

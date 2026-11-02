@@ -1,0 +1,80 @@
+id: transferencia-pix
+dominio: bancario
+conjunto: desenvolvimento
+historia: |-
+  Como correntista,
+  Quero fazer transferências via Pix,
+  Para enviar dinheiro na hora.
+criterios:
+  1: O cliente informa a chave Pix e o valor, e a transferência é concluída na hora.
+  2: A transferência só é concluída se o valor não ultrapassar o saldo.
+  3: Entre 20h e 6h, o limite por transferência é de R$ 1.000,00.
+  4: Transferências acima de R$ 5.000,00 exigem confirmação por token.
+
+gabarito:
+  analise: >-
+    Critério 1: informar a transferência conclui na hora quando as regras permitem. Critério 2: valor <= saldo.
+    Critério 3: no periodo_noturno o valor precisa ser <= 1000. Critério 4: valor > 5000 (fora do período
+    noturno e com saldo) vai para confirmação por token; token válido conclui, inválido recusa.
+  variaveis:
+    - {nome: saldo, tipo: decimal, categoria: contexto, valor_inicial: null}
+    - {nome: periodo_noturno, tipo: booleano, categoria: contexto, valor_inicial: null}
+    - {nome: valor, tipo: decimal, categoria: entrada, valor_inicial: null}
+  estados:
+    - {id: Inicio, rotulo: Nova transferência, tipo: inicial}
+    - {id: AguardandoToken, rotulo: Aguardando token, tipo: intermediario}
+    - {id: Concluida, rotulo: Transferência concluída, tipo: final}
+    - {id: Recusada, rotulo: Transferência recusada, tipo: final}
+  transicoes:
+    - {id: T1, de: Inicio, evento: informar_transferencia, para: Concluida, guarda: valor <= saldo e (não periodo_noturno ou valor <= 1000) e valor <= 5000, acoes: [], criterios: [1, 2, 3]}
+    - {id: T2, de: Inicio, evento: informar_transferencia, para: AguardandoToken, guarda: valor <= saldo e não periodo_noturno e valor > 5000, acoes: [], criterios: [4]}
+    - {id: T3, de: Inicio, evento: informar_transferencia, para: Recusada, guarda: valor > saldo ou (periodo_noturno e valor > 1000), acoes: [], criterios: [2, 3]}
+    - {id: T4, de: AguardandoToken, evento: token_valido, para: Concluida, guarda: null, acoes: [], criterios: [4]}
+    - {id: T5, de: AguardandoToken, evento: token_invalido, para: Recusada, guarda: null, acoes: [], criterios: [4]}
+
+sinonimos:
+  estados:
+    Inicio: [NovaTransferencia, InformandoDados]
+    AguardandoToken: [ConfirmacaoToken, AguardandoConfirmacao]
+    Concluida: [TransferenciaConcluida, PixEnviado, Enviada]
+    Recusada: [TransferenciaRecusada, Negada]
+  eventos:
+    informar_transferencia: [enviar_pix, transferir, informar_dados, solicitar_transferencia]
+    token_valido: [confirmar_token, token_correto]
+    token_invalido: [token_incorreto]
+  variaveis:
+    saldo: [saldo_conta, saldo_disponivel]
+    periodo_noturno: [noturno, horario_noturno]
+    valor: [valor_transferencia, valor_pix]
+
+propriedades:
+  - criterio: 1
+    descricao: Transferência simples é concluída na hora
+    contexto: {saldo: 2000, periodo_noturno: false}
+    eventos: [{evento: informar_transferencia, dados: {valor: 100}}]
+    estado_esperado: Concluida
+  - criterio: 2
+    descricao: Valor acima do saldo é recusado
+    contexto: {saldo: 50, periodo_noturno: false}
+    eventos: [{evento: informar_transferencia, dados: {valor: 100}}]
+    estado_esperado: Recusada
+  - criterio: 3
+    descricao: À noite, 1.500 reais ultrapassa o limite
+    contexto: {saldo: 5000, periodo_noturno: true}
+    eventos: [{evento: informar_transferencia, dados: {valor: 1500}}]
+    estado_esperado: Recusada
+  - criterio: 3
+    descricao: À noite, exatamente 1.000 reais é permitido
+    contexto: {saldo: 5000, periodo_noturno: true}
+    eventos: [{evento: informar_transferencia, dados: {valor: 1000}}]
+    estado_esperado: Concluida
+  - criterio: 4
+    descricao: Acima de 5.000 reais pede token
+    contexto: {saldo: 10000, periodo_noturno: false}
+    eventos: [{evento: informar_transferencia, dados: {valor: 6000}}]
+    estado_esperado: AguardandoToken
+  - criterio: 4
+    descricao: Token válido conclui a transferência alta
+    contexto: {saldo: 10000, periodo_noturno: false}
+    eventos: [{evento: informar_transferencia, dados: {valor: 6000}}, {evento: token_valido}]
+    estado_esperado: Concluida
