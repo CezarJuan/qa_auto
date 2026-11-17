@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sistemas_exemplo import SISTEMAS
 
 MAX_CARACTERES = 2000
-MOTORES = ("Gemini (Cloud)", "Ollama (Local)")
 
 PADRAO_ID_ESTADO = r"^[A-Z][A-Za-z0-9]*$"
 PADRAO_SNAKE = r"^[a-z][a-z0-9_]*$"
@@ -23,9 +22,22 @@ def numeros_de_criterios(criterios: str) -> set[int]:
 class Requisicao(BaseModel):
     user_story: str
     criterios: str
-    motor: Literal["Gemini (Cloud)", "Ollama (Local)"]
+    motor: str = Field(description="Id do provedor (ollama, gemini, openai_compat, anthropic) ou rótulo legado")
+    modelo: str | None = Field(default=None, max_length=200, description="Modelo; vazio usa o do ambiente")
     api_key: str | None = None
     sistema: str | None = None
+
+    @field_validator("motor")
+    @classmethod
+    def provedor_conhecido(cls, valor: str) -> str:
+        from .provedores import normalizar  # importado aqui: o registro depende deste módulo
+
+        return normalizar(valor.strip())
+
+    @field_validator("modelo")
+    @classmethod
+    def modelo_opcional(cls, valor: str | None) -> str | None:
+        return (valor or "").strip() or None
 
     @field_validator("user_story", "criterios")
     @classmethod

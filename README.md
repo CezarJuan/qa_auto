@@ -84,7 +84,7 @@ uvicorn backend.main:app --reload
 streamlit run app.py
 ```
 
-Desative o **Modo demonstração** na barra lateral e escolha o **Motor LLM** (Gemini ou Ollama). O provedor é escolhido a cada geração; o nome do modelo de cada provedor vem do `.env`.
+Desative o **Modo demonstração** na barra lateral e escolha o **Motor LLM**. O provedor é escolhido a cada geração. O campo **Modelo (opcional)** troca o modelo só daquela geração; se ficar vazio, vale o do `.env`.
 
 Para usar o Ollama, instale o modelo configurado (`ollama pull llama3.1:8b`). Ao subir, a API confere se ele está instalado e o carrega na memória (aquecimento). Para ver a situação:
 
@@ -105,7 +105,32 @@ A resposta informa o modelo de cada provedor, se o modelo do Ollama está dispon
 | `QA_TIMEOUT_LLM` | `180` | Tempo limite de **cada** chamada ao LLM, em segundos. |
 | `QA_ORCAMENTO_GERACAO` | `360` | Tempo total de uma geração, somando as tentativas. A interface espera esse valor + 15 s. |
 | `QA_OLLAMA_KEEP_ALIVE` | `30m` | Por quanto tempo o Ollama mantém o modelo na memória após o aquecimento. |
-| `QA_SEMENTE` | `42` | Semente da extração (Ollama e Gemini), usada junto com temperatura 0. |
+| `QA_SEMENTE` | `42` | Semente da extração (Ollama, Gemini e servidor compatível), usada junto com temperatura 0. |
+| `ANTHROPIC_API_KEY` | — | Chave da Anthropic (Claude). Só no `.env`. |
+| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Modelo do Claude. |
+| `ANTHROPIC_EFFORT` | `medium` | Esforço do modelo (`low` a `max`); vazio não envia. |
+| `ANTHROPIC_FALLBACK_RECUSA` | `1` | Se o Claude recusar por segurança, a API reexecuta em outro modelo Claude. `0` desliga. |
+| `OPENAI_COMPAT_BASE_URL` | — | URL de um servidor compatível com OpenAI (ex.: `http://localhost:1234/v1`). |
+| `OPENAI_COMPAT_API_KEY` | — | Chave desse servidor; vazia em servidores locais. |
+| `OPENAI_COMPAT_MODEL` | — | Modelo no servidor compatível. |
+| `OPENAI_COMPAT_MODO_ESQUEMA` | `json_schema` | `json_schema` (esquema estrito), `json_object` (só JSON) ou `nenhum`. |
+| `OPENAI_COMPAT_DETERMINISTICO` | `0` | `1` se o servidor respeita temperatura 0 e semente. |
+
+### Provedores de LLM
+
+| Provedor (`motor`) | Onde roda | Saída restrita ao esquema | Determinístico | Configuração mínima |
+| :--- | :--- | :---: | :---: | :--- |
+| `ollama` (padrão) | Local | ✅ | ✅ | Ollama rodando e `ollama pull llama3.1:8b` |
+| `gemini` | Nuvem (Google) | ✅ | ✅ | `GEMINI_API_KEY` |
+| `openai_compat` | Local ou nuvem, conforme a URL | Conforme o modo | Se declarado | `OPENAI_COMPAT_BASE_URL` e `OPENAI_COMPAT_MODEL` |
+| `anthropic` | Nuvem (Anthropic) | ✅ | ❌ | `ANTHROPIC_API_KEY` |
+
+- **Servidor compatível com OpenAI:** serve para LM Studio, vLLM, llama.cpp server, OpenRouter, Groq e Together. Teste feito em 2026-11-03 contra o endpoint `/v1` do próprio Ollama (`OPENAI_COMPAT_BASE_URL=http://localhost:11434/v1`, `OPENAI_COMPAT_MODEL=llama3.1:8b`, modo `json_schema`): o exemplo Login gerou um modelo válido na 2ª tentativa, em 69 s.
+- **Claude:** `claude-opus-5-5` não aceita temperatura nem semente, então a extração não é determinística, e a resposta de `/gerar` traz `"deterministico": false`. Para comparar com outros modelos, use rodadas repetidas na avaliação.
+- **Privacidade:** com provedores na nuvem, os requisitos digitados saem da máquina. A interface avisa quando o provedor escolhido é de nuvem.
+- **Custo e cota:** Gemini, Claude e serviços como OpenRouter cobram por uso. Na avaliação, comece com `--casos` e `--rodadas 1`.
+- **Saúde:** `curl http://localhost:8000/saude` mostra, para cada provedor, se está configurado, o modelo e a disponibilidade, sem mostrar chaves.
+- **Compatibilidade:** os rótulos antigos `"Ollama (Local)"` e `"Gemini (Cloud)"` continuam aceitos em `motor`.
 | `QA_AQUECER_OLLAMA` | `1` | Use `0` para não aquecer o Ollama ao subir a API. |
 | `QA_API_URL` | `http://localhost:8000` | Endereço do backend. |
 
@@ -220,7 +245,8 @@ qa_auto/
 │   ├── expressoes.py     # Linguagem de guardas e ações (interpretador sem eval)
 │   ├── entrada.py        # Numeração de critérios, importação e validação na interface
 │   ├── prompts/          # Prompt versionado (extracao_v2.md) e montagem das mensagens
-│   ├── llm.py            # Clientes Gemini e Ollama, verificação e aquecimento
+│   ├── llm.py            # Fachada dos provedores e saúde do Ollama
+│   ├── provedores/       # Registro: ollama, gemini, openai_compat, anthropic
 │   ├── servico.py        # Extração com retry e orçamento de tempo
 │   ├── validacao.py      # Regras do modelo, com todos os erros de uma vez
 │   ├── geracao.py        # Caminhos, Gherkin, Pytest e grafo

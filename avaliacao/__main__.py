@@ -9,6 +9,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from backend.provedores import REGISTRO
+
 from .casos import ErroCaso, carregar_conjunto, verificar_composicao
 from .executor import SAIDA_PADRAO, Configuracao, ErroVazamento, comparar, executar
 
@@ -20,7 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="comando", required=True)
 
     ex = sub.add_parser("executar", help="Roda a extração contra os casos de referência")
-    ex.add_argument("--provedor", choices=["ollama", "gemini"], required=True)
+    ex.add_argument("--provedor", choices=list(REGISTRO), required=True)
     ex.add_argument("--modelo", required=True, help="Ex.: llama3.1:8b, qwen2.5:7b, gemini-3.8-flash")
     ex.add_argument("--rodadas", type=int, default=3)
     ex.add_argument("--conjunto", choices=["teste", "desenvolvimento", "ambos"], default="teste")

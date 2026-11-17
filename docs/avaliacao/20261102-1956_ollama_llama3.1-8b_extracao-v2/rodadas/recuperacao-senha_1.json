@@ -1,0 +1,36 @@
+{
+  "caso": "recuperacao-senha",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 150.95,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:\n- [esquema_invalido] variaveis.1: O valor_inicial '0.0' de 'senha' não é do tipo decimal.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 48.299218400003156,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '' de 'data_envio' não é do tipo data.\n- [esquema_invalido] variaveis.1: O valor_inicial '' de 'senha' não é do tipo decimal."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 50.09558190000098,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial 'AAAA-MM-DD' de 'data_envio' não é do tipo data.\n- [esquema_invalido] variaveis.1: O valor_inicial '0' de 'senha' não é do tipo decimal."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 52.55635450000045,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.1: O valor_inicial '0.0' de 'senha' não é do tipo decimal."
+    }
+  ],
+  "modelo": null
+}

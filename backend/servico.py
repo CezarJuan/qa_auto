@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from sistemas_exemplo import obter
 
-from .llm import ErroLLM, ErroTimeout, chamar_llm, nome_do_modelo, timeout_segundos
+from .llm import ErroLLM, ErroTimeout, capacidades, chamar_llm, nome_do_modelo, timeout_segundos
 from .prompts import SYSTEM_PROMPT, VERSAO_PROMPT, montar_prompt_correcao, montar_user_prompt
 from .schemas import ModeloEstados, Requisicao
 from .validacao import ErroModelo, ErroValidacao, validar_resposta
@@ -51,6 +51,7 @@ class ResultadoGeracao:
     versao_prompt: str = VERSAO_PROMPT
     provedor: str = ""
     modelo_llm: str = ""
+    deterministico: bool = True
 
 
 def gerar(req: Requisicao, chamar=chamar_llm, relogio=time.monotonic) -> ResultadoGeracao:
@@ -74,7 +75,8 @@ def gerar(req: Requisicao, chamar=chamar_llm, relogio=time.monotonic) -> Resulta
         limite = min(timeout_segundos(), restante)
         t0 = relogio()
         try:
-            resposta = chamar(req.motor, SYSTEM_PROMPT, mensagens, api_key=req.api_key, timeout=limite)
+            resposta = chamar(req.motor, SYSTEM_PROMPT, mensagens, api_key=req.api_key, timeout=limite,
+                              modelo=req.modelo)
         except ErroLLM as e:
             if not isinstance(e, ErroTimeout):
                 raise _com_tentativas(e, tentativas)
@@ -94,7 +96,8 @@ def gerar(req: Requisicao, chamar=chamar_llm, relogio=time.monotonic) -> Resulta
         tentativas.append(Tentativa(VALIDO, relogio() - t0))
         return ResultadoGeracao(
             modelo, tentativas, relogio() - inicio,
-            versao_prompt=VERSAO_PROMPT, provedor=req.motor, modelo_llm=nome_do_modelo(req.motor),
+            versao_prompt=VERSAO_PROMPT, provedor=req.motor, modelo_llm=nome_do_modelo(req.motor, req.modelo),
+            deterministico=capacidades(req.motor, req.modelo).deterministico,
         )
 
     if tentativas and tentativas[-1].resultado == TIMEOUT:

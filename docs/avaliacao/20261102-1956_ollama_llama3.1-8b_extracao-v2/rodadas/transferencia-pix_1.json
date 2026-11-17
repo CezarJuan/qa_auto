@@ -1,0 +1,36 @@
+{
+  "caso": "transferencia-pix",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 147.51,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0,00' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'valor' não é do tipo decimal.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'chave_pix' não é do tipo inteiro.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 46.84715370000049,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0,00' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.1: O valor_inicial '' de 'hora' não é do tipo data.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'valor' não é do tipo decimal.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'chave_pix' não é do tipo inteiro."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 49.155104099998425,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.1: O valor_inicial '00:00' de 'hora' não é do tipo data.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'valor' não é do tipo decimal.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'chave_pix' não é do tipo inteiro."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 51.50711660000161,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0,00' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'valor' não é do tipo decimal.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'chave_pix' não é do tipo inteiro."
+    }
+  ],
+  "modelo": null
+}

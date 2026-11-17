@@ -237,13 +237,13 @@ def test_prompt_correcao_lista_codigos():
 def test_resultado_informa_versao_provedor_e_modelo(monkeypatch):
     monkeypatch.setenv("OLLAMA_MODEL", "qwen2.5:7b")
     r = gerar(req(), chamar=lambda *a, **k: json.dumps(LOGIN.modelo))
-    assert (r.versao_prompt, r.provedor, r.modelo_llm) == ("extracao-v2", "Ollama (Local)", "qwen2.5:7b")
+    assert (r.versao_prompt, r.provedor, r.modelo_llm) == ("extracao-v2", "ollama", "qwen2.5:7b")
 
 
 def test_resultado_com_gemini(monkeypatch):
     monkeypatch.setenv("GEMINI_MODEL", "gemini-teste")
     r = gerar(req(motor="Gemini (Cloud)"), chamar=lambda *a, **k: json.dumps(LOGIN.modelo))
-    assert (r.provedor, r.modelo_llm) == ("Gemini (Cloud)", "gemini-teste")
+    assert (r.provedor, r.modelo_llm) == ("gemini", "gemini-teste")
 
 
 def com_provedor(monkeypatch, fake):
@@ -255,7 +255,8 @@ def test_contrato_gerar_com_versao(monkeypatch):
     com_provedor(monkeypatch, lambda *a, **k: json.dumps(LOGIN.modelo))
     corpo = TestClient(app).post("/gerar", json=req().model_dump()).json()
     assert corpo["versao_prompt"] == "extracao-v2"
-    assert corpo["provedor"] == "Ollama (Local)"
+    assert corpo["provedor"] == "ollama"
+    assert corpo["deterministico"] is True
     assert corpo["modelo_llm"] == "llama3.1:8b"
     assert corpo["modelo"]["analise"]
     assert corpo["historico"][0]["resultado"] == "valido"

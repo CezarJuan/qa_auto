@@ -24,6 +24,7 @@ from backend.execucao import (
     executar_testes,
 )
 from backend.geracao import gerar_artefatos, modelo_para_mermaid
+from backend.provedores import REGISTRO as PROVEDORES
 from backend.schemas import MAX_CARACTERES, criterios_cobertos, estado_inicial
 from backend.servico import espera_maxima
 from demo_data import EXEMPLOS, modelo_de_referencia
@@ -194,12 +195,15 @@ def chamar_backend(
     motor: str,
     api_key: str | None = None,
     sistema: str | None = None,
+    modelo: str | None = None,
 ) -> dict:
     """Envia os requisitos ao backend e devolve o corpo da resposta.
 
     Lança RuntimeError com mensagem legível em qualquer falha, sem expor exceções ao usuário.
     """
     payload = {"user_story": user_story, "criterios": criterios, "motor": motor, "sistema": sistema}
+    if modelo:
+        payload["modelo"] = modelo
     if api_key:
         payload["api_key"] = api_key
     try:
@@ -392,10 +396,22 @@ if "user_story" not in st.session_state:
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
     st.markdown("### ⚙️ Configurações")
-    modelo_selecionado = st.selectbox("Motor LLM", ["Gemini (Cloud)", "Ollama (Local)"])
+    provedor_id = st.selectbox(
+        "Motor LLM", list(PROVEDORES), key="provedor", format_func=lambda i: PROVEDORES[i].nome
+    )
+    provedor = PROVEDORES[provedor_id]
+    modelo_selecionado = provedor.nome
+    modelo_llm = st.text_input(
+        "Modelo (opcional)",
+        key="modelo_llm",
+        placeholder=provedor.modelo_padrao() or "defina OPENAI_COMPAT_MODEL",
+        help="Vazio usa o modelo configurado no .env para este provedor.",
+    )
+    if provedor.nuvem:
+        st.caption("☁️ Este provedor roda na nuvem: os requisitos digitados serão enviados a ele.")
 
     api_key_custom = None
-    if modelo_selecionado == "Gemini (Cloud)":
+    if provedor_id == "gemini":
         api_key_custom = st.text_input(
             "🔑 Chave API Gemini (opcional)",
             type="password",
@@ -510,13 +526,16 @@ if gerar_btn:
                         resposta = chamar_backend(
                             user_story,
                             criterios_numerados,
-                            modelo_selecionado,
+                            provedor_id,
                             api_key=api_key_custom or None,
                             sistema=sistema_alvo,
+                            modelo=modelo_llm.strip() or None,
                         )
                         modelo_gerado = resposta["modelo"]
                         tentativas, duracao_backend = resposta.get("tentativas"), resposta.get("duracao")
                         historico = resposta.get("historico") or []
+                        if resposta.get("modelo_llm"):
+                            modelo_selecionado = f"{provedor.nome} · {resposta['modelo_llm']}"
                     status.update(label="Análise concluída ✅", state="complete", expanded=False)
                 duracao = time.perf_counter() - t0
                 st.session_state["resultado"] = {

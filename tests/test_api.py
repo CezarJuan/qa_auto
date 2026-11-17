@@ -49,7 +49,7 @@ def com_provedor(monkeypatch, fake):
 def test_type_error_nao_dispara_segunda_chamada():
     chamadas = []
 
-    def fake(motor, system, msgs, api_key=None, timeout=None):
+    def fake(motor, system, msgs, api_key=None, timeout=None, modelo=None):
         chamadas.append(api_key)
         raise TypeError("bug interno")
 
@@ -135,7 +135,7 @@ def test_tentativas_lentas_param_antes_do_orcamento(monkeypatch):
     relogio = Relogio()
     limites = []
 
-    def fake_lento(motor, system, msgs, api_key=None, timeout=None):
+    def fake_lento(motor, system, msgs, api_key=None, timeout=None, modelo=None):
         limites.append(timeout)
         relogio.agora += 100  # cada resposta inválida leva 100 s
         return "lixo"
@@ -188,7 +188,8 @@ def test_contrato_gerar(cliente, monkeypatch):
     r = cliente.post("/gerar", json={**CORPO, "sistema": "login"})
     assert r.status_code == 200
     corpo = r.json()
-    assert set(corpo) == {"modelo", "tentativas", "duracao", "historico", "versao_prompt", "provedor", "modelo_llm"}
+    assert set(corpo) == {"modelo", "tentativas", "duracao", "historico", "versao_prompt", "provedor", "modelo_llm",
+                         "deterministico"}
     assert corpo["modelo"]["estados"][0] == {"id": "SemFalha", "rotulo": "Sem falha", "tipo": "inicial"}
     assert corpo["tentativas"] == 1
     assert corpo["duracao"] >= 0
@@ -196,13 +197,19 @@ def test_contrato_gerar(cliente, monkeypatch):
 
 
 # /saude
-def test_saude(cliente, monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", "segredo")
+@pytest.fixture
+def ollama_verificado(monkeypatch):
+    import backend.provedores.ollama as prov_ollama
+
     monkeypatch.setattr(
-        llm,
-        "verificar_ollama",
+        prov_ollama,
+        "verificar",
         lambda: {"modelo": "llama3.1:8b", "acessivel": True, "disponivel": True, "instalados": [], "mensagem": ""},
     )
+
+
+def test_saude(cliente, monkeypatch, ollama_verificado):
+    monkeypatch.setenv("GEMINI_API_KEY", "segredo")
     corpo = cliente.get("/saude").json()
     assert corpo["status"] == "ok"
     assert corpo["ollama"]["modelo"] == "llama3.1:8b"
@@ -211,14 +218,54 @@ def test_saude(cliente, monkeypatch):
     assert "segredo" not in json.dumps(corpo)
 
 
-def test_saude_informa_carregamento(cliente, monkeypatch):
+def test_saude_uma_entrada_por_provedor(cliente, ollama_verificado):
+    provedores = cliente.get("/saude").json()["provedores"]
+    assert list(provedores) == ["ollama", "gemini", "openai_compat", "anthropic"]
+    for ident, info in provedores.items():
+        assert info["id"] == ident
+        assert {"nome", "modelo", "configurado", "deterministico", "nuvem"} <= set(info)
+    assert provedores["anthropic"]["modelo"] == "claude-opus-5-5"
+    assert provedores["anthropic"]["deterministico"] is False
+
+
+def test_saude_provedor_compativel_sem_url(cliente, ollama_verificado, monkeypatch):
+    monkeypatch.delenv("OPENAI_COMPAT_BASE_URL", raising=False)
+    info = cliente.get("/saude").json()["provedores"]["openai_compat"]
+    assert info["configurado"] is False and "OPENAI_COMPAT_BASE_URL" in info["mensagem"]
+
+
+def test_saude_nunca_expoe_chaves(cliente, ollama_verificado, monkeypatch):
+    from backend.provedores import openai_compat
+
+    class ServidorFalso:
+        models = type("M", (), {"list": staticmethod(lambda: [])})()
+
+    monkeypatch.setattr(openai_compat, "cliente", lambda limite: ServidorFalso())
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-segredo-anthropic")
+    monkeypatch.setenv("GEMINI_API_KEY", "segredo-gemini")
+    monkeypatch.setenv("OPENAI_COMPAT_BASE_URL", "http://localhost:1234/v1")
+    monkeypatch.setenv("OPENAI_COMPAT_MODEL", "m")
+    monkeypatch.setenv("OPENAI_COMPAT_API_KEY", "segredo-compat")
+    corpo = cliente.get("/saude").json()
+    texto = json.dumps(corpo)
+    for segredo in ("sk-ant-segredo-anthropic", "segredo-gemini", "segredo-compat"):
+        assert segredo not in texto
+    assert corpo["provedores"]["anthropic"]["chave_configurada"] is True
+    assert corpo["provedores"]["openai_compat"]["acessivel"] is True
+
+
+def test_saude_informa_carregamento(cliente, ollama_verificado, monkeypatch):
     monkeypatch.setattr(llm.AQUECIMENTO, "situacao", llm.EstadoAquecimento.CARREGANDO)
-    monkeypatch.setattr(
-        llm,
-        "verificar_ollama",
-        lambda: {"modelo": "m", "acessivel": True, "disponivel": True, "instalados": ["m"], "mensagem": ""},
-    )
     assert cliente.get("/saude").json()["ollama"]["situacao"] == "carregando modelo"
+
+
+# 4.1 determinismo no contrato (vem das capacidades do provedor, não do cliente)
+@pytest.mark.parametrize("motor, esperado", [("ollama", True), ("gemini", True), ("anthropic", False)])
+def test_contrato_deterministico_por_provedor(cliente, monkeypatch, motor, esperado):
+    com_provedor(monkeypatch, lambda *a, **k: json.dumps(LOGIN.modelo))
+    r = cliente.post("/gerar", json={**CORPO, "motor": motor, "sistema": "login"})
+    assert r.status_code == 200, r.text
+    assert (r.json()["provedor"], r.json()["deterministico"]) == (motor, esperado)
 
 
 def test_startup_dispara_aquecimento(monkeypatch):

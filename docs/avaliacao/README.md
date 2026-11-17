@@ -13,11 +13,17 @@ python -m avaliacao executar --provedor ollama --modelo qwen2.5:7b --casos saque
 
 # Gemini (precisa de GEMINI_API_KEY no .env)
 python -m avaliacao executar --provedor gemini --modelo gemini-3.8-flash --rodadas 3
+
+# Claude (precisa de ANTHROPIC_API_KEY; extração não determinística, então as rodadas medem variância)
+python -m avaliacao executar --provedor anthropic --modelo claude-opus-5-5 --rodadas 3
+
+# Qualquer servidor compatível com OpenAI (precisa de OPENAI_COMPAT_BASE_URL)
+python -m avaliacao executar --provedor openai_compat --modelo qwen2.5-7b-instruct --conjunto desenvolvimento
 ```
 
 | Opção | Padrão | Uso |
 |---|---|---|
-| `--provedor` | — | `ollama` ou `gemini` |
+| `--provedor` | — | Qualquer id do registro: `ollama`, `gemini`, `openai_compat` ou `anthropic` |
 | `--modelo` | — | Nome do modelo no provedor |
 | `--rodadas` | 3 | Extrações por caso (para estimar a variância) |
 | `--conjunto` | `teste` | `teste`, `desenvolvimento` ou `ambos` |
@@ -76,3 +82,20 @@ O que ela mostra:
 - **As falhas de validade vêm de regras reais do formato**, como datas em `valor_inicial` escritas como `"AAAA-MM-DD"` literalmente, finais com saída e guardas sobrepostas. A lista completa está em "Rodadas inválidas" no relatório.
 - **As 3 rodadas de cada caso deram resultados idênticos** (desvio padrão 0 por caso), porque a extração usa temperatura 0 e semente fixa. Para medir variância de verdade, varie a semente (`QA_SEMENTE`) entre execuções; repetir rodadas com a mesma configuração só confirma o determinismo.
 - **Pode haver sinônimos faltando**: por exemplo, o estado `AcessoConcedido` não foi casado com `Autenticado`. Eles não foram acrescentados depois de ver os resultados, para não ajustar o conjunto de teste à saída do modelo. Cabe à revisão em dupla (`benchmark/README.md`) decidir.
+
+## Comparação de provedores no conjunto de desenvolvimento (2026-11-02)
+
+Feita no change `add-llm-providers`: 1 rodada nos 8 casos de desenvolvimento, prompt `extracao-v2`, mesma máquina. Tabela completa em [`comparacao-desenvolvimento-20261102.md`](comparacao-desenvolvimento-20261102.md).
+
+| Métrica | `llama3.1:8b` (provedor `ollama`) | `gemma4:12b` (provedor `openai_compat`, endpoint `/v1` do Ollama) |
+|---|---|---|
+| Validade | 0,38 (3 de 8) | 0,00 |
+| Precisão / recall de estados | 0,31 / 0,30 | 0,00 / 0,00 |
+| Precisão / recall de transições | 0,22 / 0,16 | 0,00 / 0,00 |
+| Propriedades satisfeitas | 0,15 (Login 0,80; Carrinho 0,40) | 0,00 |
+| Timeout | 0 de 8 | 8 de 8 (as duas tentativas de cada caso passaram de 180 s) |
+| Duração média | 129 s | 362 s |
+
+- O provedor `openai_compat` funcionou de ponta a ponta: no teste isolado com `llama3.1:8b`, o Login saiu válido em 69 s. Os timeouts são do `gemma4:12b` nesta máquina. A causa não foi investigada: pode ser geração mais longa ou lentidão do modelo de 12B no hardware disponível. Antes de descartar o modelo, teste com `QA_TIMEOUT_LLM` maior ou em outra máquina.
+- No conjunto de desenvolvimento, o `llama3.1:8b` vai melhor que no de teste (0,15 contra 0,00 de propriedades), puxado pelo Login, que é o exemplo resolvido do prompt. Isso mostra por que o conjunto de teste precisa ficar fora dos exemplos.
+- **Claude (`anthropic`): não medido.** Não há credencial da Anthropic nesta máquina. Para medir, defina `ANTHROPIC_API_KEY` no `.env` e rode `python -m avaliacao executar --provedor anthropic --modelo claude-opus-5-5 --rodadas 1 --conjunto desenvolvimento` (gera custo).

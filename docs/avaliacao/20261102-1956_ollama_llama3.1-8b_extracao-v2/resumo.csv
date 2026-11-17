@@ -1,0 +1,26 @@
+caso,conjunto,rodada,valido,timeout,tentativas,primeira_tentativa_valida,duracao_s,precisao_estados,recall_estados,precisao_transicoes,recall_transicoes,propriedades,erro
+agendamento-consulta,desenvolvimento,1,0,0,3,0,113.73,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 1 erro(s):
+- [guarda_invalida] Guarda de T3: Guarda com sintaxe inválida: 'data_atual - horario_agendado >= 1 dia'."
+assinatura-streaming,desenvolvimento,1,0,0,3,0,181.05,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 8 erro(s):
+- [variavel_nao_declarada] A guarda de T4 usa a variável 'cobranca_falhou_3_veces', que não foi declarada.
+- [variavel_nao_declarada] A guarda de T5 usa a variável 'cobranca_falhou_2_veces', que não foi declarada.
+- [variavel_nao_declarada] A guarda de T6 usa a variável 'cobranca_falhou_1_vez', que não foi declarada.
+- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T4. Estados finais não podem ter saída.
+- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T5. Estados finais não podem ter saída.
+- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T6. Estados finais não podem ter saída.
+- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T7. Estados finais não podem ter saída.
+- [criterio_nao_coberto] O critério 1 não está representado em nenhuma transição."
+carrinho,desenvolvimento,1,1,0,2,0,79.92,1.0,1.0,0.75,0.6,0.4,
+login,desenvolvimento,1,1,0,2,0,68.72,1.0,1.0,1.0,0.6667,0.8,
+matricula-curso,desenvolvimento,1,1,0,3,0,107.51,0.5,0.4,0.0,0.0,0.0,
+pedido-delivery,desenvolvimento,1,0,0,3,0,185.11,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 4 erro(s):
+- [tipo_incompativel] Guarda de T3: Comparação entre tipos diferentes (booleano e texto).
+- [tipo_incompativel] Guarda de T4: Comparação entre tipos diferentes (booleano e texto).
+- [tipo_incompativel] Guarda de T10: Comparação entre tipos diferentes (booleano e texto).
+- [transicao_duplicada] As transições T3 e T10 são iguais (PedidoEnviado --restaurante_respondeu--> PedidoAceito). Remova uma delas."
+recuperacao-senha,desenvolvimento,1,0,0,3,0,150.95,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.1: O valor_inicial '0.0' de 'senha' não é do tipo decimal."
+transferencia-pix,desenvolvimento,1,0,0,3,0,147.51,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.0: O valor_inicial '0,00' de 'saldo' não é do tipo decimal.
+- [esquema_invalido] variaveis.2: O valor_inicial '' de 'valor' não é do tipo decimal.
+- [esquema_invalido] variaveis.3: O valor_inicial '' de 'chave_pix' não é do tipo inteiro."

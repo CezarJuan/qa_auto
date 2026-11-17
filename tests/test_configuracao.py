@@ -102,17 +102,24 @@ def test_env_example_completo_e_sem_segredo():
         "QA_TIMEOUT_LLM",
         "QA_ORCAMENTO_GERACAO",
         "QA_OLLAMA_KEEP_ALIVE",
+        "ANTHROPIC_MODEL",
+        "OPENAI_COMPAT_MODEL",
     ):
         assert nome in valores, nome
-    assert valores["GEMINI_API_KEY"].strip() == ""
+    for chave in ("GEMINI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_COMPAT_API_KEY"):
+        assert valores[chave].strip() == "", chave
     assert ":" in valores["OLLAMA_MODEL"]  # modelo com tag explícita
+    assert valores["ANTHROPIC_MODEL"] == "claude-opus-5-5"
 
 
 def test_env_example_cobre_variaveis_lidas_pelo_codigo():
     texto = (RAIZ / ".env.example").read_text(encoding="utf-8")
-    codigo = "\n".join(p.read_text(encoding="utf-8") for p in (RAIZ / "backend").glob("*.py"))
-    lidas = set(re.findall(r'os\.getenv\("((?:QA|OLLAMA|GEMINI)_[A-Z_]+)"', codigo))
+    codigo = "\n".join(p.read_text(encoding="utf-8") for p in (RAIZ / "backend").rglob("*.py"))
+    lidas = set(re.findall(r'os\.getenv\("((?:QA|OLLAMA|GEMINI|ANTHROPIC|OPENAI_COMPAT)_[A-Z_]+)"', codigo))
+    lidas.add("ANTHROPIC_MODEL")  # lidas por Provedor.modelo_padrao via variavel_modelo
+    lidas.add("OPENAI_COMPAT_MODEL")
     lidas.discard("QA_VARIANTE")  # usada só pelo script de teste gerado, não pela aplicação
+    lidas.discard("ANTHROPIC_AUTH_TOKEN")  # credencial alternativa da Anthropic, só consultada
     assert lidas, "nenhuma variável encontrada"
     assert {v for v in lidas if f"{v}=" not in texto} == set()
 

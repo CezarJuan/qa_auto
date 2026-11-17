@@ -1,0 +1,31 @@
+{
+  "caso": "agendamento-consulta",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": false,
+  "timeout": true,
+  "tentativas": 2,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 362.05,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 168s.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "timeout",
+      "duracao": 192.3238534000011,
+      "erro": "OpenAI compatível: não respondeu em 180s."
+    },
+    {
+      "resultado": "timeout",
+      "duracao": 169.7210288999995,
+      "erro": "OpenAI compatível: não respondeu em 168s."
+    }
+  ],
+  "modelo": null
+}

@@ -5,17 +5,15 @@ resumo.csv e relatorio.md.
 """
 import csv
 import json
-import os
 import re
 import statistics
 import time
 from collections import Counter, defaultdict
-from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from backend import servico
+from backend import provedores, servico
 from backend.llm import ErroLLM
 from backend.prompts import EXEMPLOS_DO_PROMPT, SYSTEM_PROMPT, VERSAO_PROMPT
 from backend.schemas import Requisicao
@@ -28,7 +26,6 @@ from .metricas import calcular
 
 RAIZ = Path(__file__).resolve().parent.parent
 SAIDA_PADRAO = RAIZ / "resultados"
-PROVEDORES = {"ollama": ("Ollama (Local)", "OLLAMA_MODEL"), "gemini": ("Gemini (Cloud)", "GEMINI_MODEL")}
 SEGUNDOS_TIPICOS_POR_EXTRACAO = 60
 
 COLUNAS = [
@@ -112,20 +109,6 @@ def verificar_vazamento(casos_teste: list[Caso], versao_prompt: str,
 
 
 # ---------------------------------------------------------------- execução
-@contextmanager
-def _modelo_configurado(provedor: str, modelo: str):
-    variavel = PROVEDORES[provedor][1]
-    anterior = os.environ.get(variavel)
-    os.environ[variavel] = modelo
-    try:
-        yield
-    finally:
-        if anterior is None:
-            os.environ.pop(variavel, None)
-        else:
-            os.environ[variavel] = anterior
-
-
 def _slug(texto: str) -> str:
     return re.sub(r"[^A-Za-z0-9.]+", "-", texto).strip("-")
 
@@ -149,7 +132,8 @@ def avaliar_rodada(caso: Caso, n: int, config: Configuracao, gerar, embeddings: 
     req = Requisicao(
         user_story=caso.historia,
         criterios=caso.criterios_texto,
-        motor=PROVEDORES[config.provedor][0],
+        motor=config.provedor,
+        modelo=config.modelo,
         sistema=caso.sistema,
     )
     t0 = time.perf_counter()
@@ -184,8 +168,9 @@ def executar(config: Configuracao, casos: list[Caso] | None = None, saida: Path 
              exemplos_do_prompt: list[str] | None = None, texto_prompt: str | None = None,
              mensagem=print) -> Path:
     """Roda a avaliação e devolve a pasta com os resultados."""
-    if config.provedor not in PROVEDORES:
-        raise ValueError(f"Provedor desconhecido: {config.provedor} (use ollama ou gemini)")
+    config.provedor = provedores.normalizar(config.provedor)
+    provedor = provedores.obter(config.provedor)
+    deterministico = provedor.capacidades(provedor.modelo(config.modelo)).deterministico
     todos = carregar_conjunto()
     verificar_vazamento([c for c in todos if c.conjunto == TESTE], config.versao_prompt,
                         exemplos_do_prompt, texto_prompt)
@@ -202,25 +187,25 @@ def executar(config: Configuracao, casos: list[Caso] | None = None, saida: Path 
     pasta = _pasta_execucao(Path(saida), config, agora or datetime.now())
     (pasta / "rodadas").mkdir(parents=True)
     (pasta / "config.json").write_text(
-        json.dumps({**asdict(config), "casos_avaliados": [c.id for c in casos]}, ensure_ascii=False, indent=2),
+        json.dumps({**asdict(config), "casos_avaliados": [c.id for c in casos], "deterministico": deterministico},
+                   ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     mensagem(f"Avaliação em {pasta}: {estimativa(len(casos) * config.rodadas)}")
 
     rodadas: list[Rodada] = []
-    with _modelo_configurado(config.provedor, config.modelo):
-        for caso in casos:
-            for n in range(1, config.rodadas + 1):
-                rodada = avaliar_rodada(caso, n, config, gerar, embeddings)
-                rodadas.append(rodada)
-                (pasta / "rodadas" / f"{caso.id}_{n}.json").write_text(
-                    json.dumps(asdict(rodada), ensure_ascii=False, indent=2), encoding="utf-8"
-                )
-                situacao = "válido" if rodada.valido else ("timeout" if rodada.timeout else "inválido")
-                mensagem(f"  {caso.id} #{n}: {situacao}, propriedades {rodada.propriedades:.2f}, "
-                         f"{rodada.duracao_s:.0f}s")
+    for caso in casos:
+        for n in range(1, config.rodadas + 1):
+            rodada = avaliar_rodada(caso, n, config, gerar, embeddings)
+            rodadas.append(rodada)
+            (pasta / "rodadas" / f"{caso.id}_{n}.json").write_text(
+                json.dumps(asdict(rodada), ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            situacao = "válido" if rodada.valido else ("timeout" if rodada.timeout else "inválido")
+            mensagem(f"  {caso.id} #{n}: {situacao}, propriedades {rodada.propriedades:.2f}, "
+                     f"{rodada.duracao_s:.0f}s")
     _gravar_resumo(pasta, rodadas)
-    (pasta / "relatorio.md").write_text(relatorio(config, casos, rodadas), encoding="utf-8")
+    (pasta / "relatorio.md").write_text(relatorio(config, casos, rodadas, deterministico), encoding="utf-8")
     return pasta
 
 
@@ -246,13 +231,14 @@ def _fmt(media: float, dp: float, chave: str) -> str:
     return f"{media:.1f} ± {dp:.1f}" if chave == "duracao_s" else f"{media:.2f} ± {dp:.2f}"
 
 
-def relatorio(config: Configuracao, casos: list[Caso], rodadas: list[Rodada]) -> str:
+def relatorio(config: Configuracao, casos: list[Caso], rodadas: list[Rodada], deterministico: bool = True) -> str:
     linhas = [
         f"# Avaliação: {config.provedor} / {config.modelo} / {config.versao_prompt}",
         "",
         f"- Conjunto: {config.conjunto}; casos: {len(casos)}; rodadas por caso: {config.rodadas}; "
         f"total de rodadas: {len(rodadas)}",
         f"- Alinhamento semântico: {'sim' if config.alinhamento_semantico else 'não'}",
+        f"- Extração determinística: {'sim (temperatura 0 e semente)' if deterministico else 'não: o provedor não aceita temperatura e semente, então as rodadas medem variância'}",
         "",
         "## Total",
         "",

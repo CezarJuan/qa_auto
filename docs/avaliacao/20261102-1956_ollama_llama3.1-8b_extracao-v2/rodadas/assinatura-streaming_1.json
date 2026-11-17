@@ -1,0 +1,36 @@
+{
+  "caso": "assinatura-streaming",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 181.05,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 8 erro(s):\n- [variavel_nao_declarada] A guarda de T4 usa a variável 'cobranca_falhou_3_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T5 usa a variável 'cobranca_falhou_2_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T6 usa a variável 'cobranca_falhou_1_vez', que não foi declarada.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T4. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T5. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T6. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T7. Estados finais não podem ter saída.\n- [criterio_nao_coberto] O critério 1 não está representado em nenhuma transição.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 61.83753760000036,
+      "erro": "O modelo tem 10 erro(s):\n- [variavel_nao_declarada] A guarda de T2 usa a variável 'cobranca_aprovada', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T3 usa a variável 'cobranca_rejeitada', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T4 usa a variável 'cobranca_falhou_3_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T5 usa a variável 'cobranca_falhou_2_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T6 usa a variável 'cobranca_falhou_1_vez', que não foi declarada.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T4. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T5. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T6. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T7. Estados finais não podem ter saída.\n- [criterio_nao_coberto] O critério 1 não está representado em nenhuma transição."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 59.070275899997796,
+      "erro": "O modelo tem 8 erro(s):\n- [variavel_nao_declarada] A guarda de T4 usa a variável 'cobranca_falhou_3_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T5 usa a variável 'cobranca_falhou_2_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T6 usa a variável 'cobranca_falhou_1_vez', que não foi declarada.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T4. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T5. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T6. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T7. Estados finais não podem ter saída.\n- [criterio_nao_coberto] O critério 2 não está representado em nenhuma transição."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 60.13950359999944,
+      "erro": "O modelo tem 8 erro(s):\n- [variavel_nao_declarada] A guarda de T4 usa a variável 'cobranca_falhou_3_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T5 usa a variável 'cobranca_falhou_2_veces', que não foi declarada.\n- [variavel_nao_declarada] A guarda de T6 usa a variável 'cobranca_falhou_1_vez', que não foi declarada.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T4. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T5. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T6. Estados finais não podem ter saída.\n- [final_com_saida] 'AssinanteAtivo' é final e tem a transição de saída T7. Estados finais não podem ter saída.\n- [criterio_nao_coberto] O critério 1 não está representado em nenhuma transição."
+    }
+  ],
+  "modelo": null
+}

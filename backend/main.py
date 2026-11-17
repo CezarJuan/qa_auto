@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from . import llm, servico
-from .llm import ErroLLM, modelo_gemini
+from .llm import ErroLLM
 from .schemas import ModeloEstados, Requisicao
 from .servico import ErroOrcamento
 from .validacao import ErroModelo
@@ -47,6 +47,7 @@ class RespostaGeracao(BaseModel):
     versao_prompt: str
     provedor: str
     modelo_llm: str
+    deterministico: bool
 
 
 def erro(status: int, codigo: str, mensagem: str, **extra) -> JSONResponse:
@@ -99,21 +100,19 @@ def gerar(req: Requisicao) -> RespostaGeracao:
         versao_prompt=resultado.versao_prompt,
         provedor=resultado.provedor,
         modelo_llm=resultado.modelo_llm,
+        deterministico=resultado.deterministico,
     )
 
 
 @app.get("/saude")
 def saude() -> dict:
-    ollama = llm.verificar_ollama()
-    ollama["situacao"] = llm.AQUECIMENTO.situacao
-    ollama["aquecimento"] = llm.AQUECIMENTO.mensagem
+    provedores = llm.saude_provedores()
     return {
         "status": "ok",
-        "ollama": ollama,
-        "gemini": {
-            "modelo": modelo_gemini(),
-            "chave_configurada": bool(os.getenv("GEMINI_API_KEY", "").strip()),
-        },
+        "provedores": provedores,
+        # Atalhos mantidos por compatibilidade com clientes da versão anterior
+        "ollama": provedores["ollama"],
+        "gemini": provedores["gemini"],
         "orcamento_segundos": servico.orcamento_segundos(),
         "timeout_chamada_segundos": llm.timeout_segundos(),
     }

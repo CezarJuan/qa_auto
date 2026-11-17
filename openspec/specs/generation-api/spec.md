@@ -7,7 +7,7 @@ Definir o contrato HTTP entre interface e backend para extrair o modelo de estad
 ## Requirements
 
 ### Requirement: Endpoint de geração
-O endpoint `/gerar` SHALL receber a história, os critérios numerados, o provedor e o sistema alvo opcional, e SHALL devolver o modelo de estados, a lista de tentativas com duração, resultado e erros, a duração total e a versão do prompt, o provedor e o modelo usados.
+O endpoint `/gerar` SHALL receber a história, os critérios numerados, o provedor (id do registro ou rótulo legado), o modelo opcional e o sistema alvo opcional. SHALL devolver o modelo de estados, a lista de tentativas com duração, resultado e erros, a duração total, a versão do prompt, o provedor e o modelo usados e se a extração foi determinística.
 
 #### Scenario: Geração bem-sucedida
 - **WHEN** a interface envia um requisito válido
@@ -16,6 +16,14 @@ O endpoint `/gerar` SHALL receber a história, os critérios numerados, o proved
 #### Scenario: Falha após todas as tentativas
 - **WHEN** as tentativas se esgotam com modelos inválidos
 - **THEN** a resposta é 422 e o corpo inclui os erros da última tentativa
+
+#### Scenario: Rótulo legado do provedor
+- **WHEN** a requisição usa o motor "Ollama (Local)"
+- **THEN** a geração usa o provedor `ollama`, como antes
+
+#### Scenario: Extração não determinística
+- **WHEN** a geração usa um provedor que não aceita temperatura nem semente
+- **THEN** a resposta informa que a extração não foi determinística
 
 ### Requirement: Códigos de erro padronizados
 A API SHALL responder 422 para entrada ou modelo inválido, 502 para falha do provedor de LLM, 504 para orçamento de tempo esgotado e 500 para erro interno, sempre com corpo JSON contendo um código e uma mensagem legível.
@@ -52,8 +60,9 @@ A interface SHALL mostrar mensagem legível para qualquer resposta de erro, incl
 - **THEN** a interface informa que o backend está indisponível e como iniciá-lo
 
 ### Requirement: Endpoint de saúde
-O endpoint `/saude` SHALL informar se o backend está ativo, o modelo configurado de cada provedor, se o modelo do Ollama está disponível e se há API key do Gemini configurada, sem expor a chave.
+O endpoint `/saude` SHALL informar se o backend está ativo e, para cada provedor do registro, se está configurado, o modelo que usaria e sua disponibilidade, incluindo o modelo do Ollama e o aquecimento, sem expor chaves.
 
 #### Scenario: Consulta de saúde
 - **WHEN** a interface consulta `/saude`
-- **THEN** recebe o modelo de cada provedor, a disponibilidade do modelo do Ollama e se a chave do Gemini existe
+- **THEN** recebe uma entrada por provedor com configuração, modelo e disponibilidade
+- **AND** a entrada do Ollama mantém a disponibilidade do modelo e a situação do aquecimento

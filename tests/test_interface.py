@@ -392,3 +392,42 @@ def test_executar_saque(app):
     gerar(app)
     app.button(key="executar").click().run()
     assert any("Bug detectado" in s.value for s in app.success)
+
+
+# add-llm-providers 5.1: provedor e modelo na barra lateral
+def test_provedores_vem_do_registro(app):
+    from backend.provedores import REGISTRO
+
+    seletor = app.selectbox(key="provedor")
+    assert seletor.options == [p.nome for p in REGISTRO.values()]
+    assert seletor.value == "ollama"
+
+
+def test_motor_e_modelo_enviados(app, backend_falso):
+    modo_real(app)
+    app.selectbox(key="provedor").set_value("anthropic").run()
+    app.text_input(key="modelo_llm").input("claude-sonnet-5-5").run()
+    gerar(app)
+    assert backend_falso["enviado"]["motor"] == "anthropic"
+    assert backend_falso["enviado"]["modelo"] == "claude-sonnet-5-5"
+    assert "api_key" not in backend_falso["enviado"]
+
+
+def test_modelo_vazio_nao_e_enviado(app, backend_falso):
+    modo_real(app)
+    gerar(app)
+    assert backend_falso["enviado"]["motor"] == "ollama"
+    assert "modelo" not in backend_falso["enviado"]
+
+
+def test_aviso_de_envio_para_a_nuvem(app):
+    aviso = "requisitos digitados serão enviados"
+    assert not any(aviso in c.value for c in app.caption)  # Ollama é local
+    app.selectbox(key="provedor").set_value("anthropic").run()
+    assert any(aviso in c.value for c in app.caption)
+
+
+def test_chave_do_gemini_so_para_o_gemini(app):
+    assert not [t for t in app.text_input if "Gemini" in (t.label or "")]
+    app.selectbox(key="provedor").set_value("gemini").run()
+    assert [t for t in app.text_input if "Gemini" in (t.label or "")]

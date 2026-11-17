@@ -368,22 +368,51 @@ def test_executa_rodadas_por_caso_de_teste(tmp_path):
     teste = [c for c in CASOS.values() if c.conjunto == "teste"]
     assert len(gerar.chamadas) == 3 * len(teste)
     assert pasta.name == "20261102-1530_ollama_qwen2.5-7b_extracao-v2"
-    assert {r.motor for r in gerar.chamadas} == {"Ollama (Local)"}
+    assert {r.motor for r in gerar.chamadas} == {"ollama"}
 
 
-def test_modelo_configurado_durante_a_execucao(tmp_path, monkeypatch):
+def test_modelo_vai_na_requisicao(tmp_path, monkeypatch):
     import os
 
-    vistos = []
-    base = gerador()
-
-    def gerar(req):
-        vistos.append(os.environ.get("OLLAMA_MODEL"))
-        return base(req)
-
+    gerar = gerador()
     rodar(tmp_path, gerar, casos=["saque-atm"], rodadas=1)
-    assert vistos == ["qwen2.5:7b"]
-    assert os.environ.get("OLLAMA_MODEL") is None  # restaurado depois
+    assert [r.modelo for r in gerar.chamadas] == ["qwen2.5:7b"]
+    assert os.environ.get("OLLAMA_MODEL") is None  # o ambiente não é mais alterado
+
+
+def test_qualquer_provedor_do_registro(tmp_path):
+    gerar = gerador()
+    config = Configuracao(provedor="anthropic", modelo="claude-opus-5-5", rodadas=1, casos=["saque-atm"])
+    pasta = executar(config, saida=tmp_path, gerar=gerar, agora=datetime(2026, 11, 3, 9, 0), mensagem=lambda *_: None)
+    assert {(r.motor, r.modelo) for r in gerar.chamadas} == {("anthropic", "claude-opus-5-5")}
+    assert pasta.name == "20261103-0900_anthropic_claude-opus-5-5_extracao-v2"
+    config_json = json.loads((pasta / "config.json").read_text(encoding="utf-8"))
+    assert config_json["deterministico"] is False
+    assert "Extração determinística: não" in (pasta / "relatorio.md").read_text(encoding="utf-8")
+
+
+def test_determinismo_registrado_para_ollama(tmp_path):
+    pasta = rodar(tmp_path, gerador(), casos=["saque-atm"], rodadas=1)
+    assert json.loads((pasta / "config.json").read_text(encoding="utf-8"))["deterministico"] is True
+    assert "Extração determinística: sim" in (pasta / "relatorio.md").read_text(encoding="utf-8")
+
+
+def test_rotulo_legado_normalizado(tmp_path):
+    gerar = gerador()
+    config = Configuracao(provedor="Gemini (Cloud)", modelo="g", rodadas=1, casos=["saque-atm"])
+    pasta = executar(config, saida=tmp_path, gerar=gerar, agora=datetime(2026, 11, 3, 9, 5), mensagem=lambda *_: None)
+    assert {r.motor for r in gerar.chamadas} == {"gemini"} and "_gemini_" in pasta.name
+
+
+def test_provedor_desconhecido_na_avaliacao(tmp_path):
+    with pytest.raises(ValueError, match="fantasma"):
+        executar(Configuracao(provedor="fantasma", modelo="x", rodadas=1, casos=["saque-atm"]), saida=tmp_path,
+                 gerar=gerador(), mensagem=lambda *_: None)
+
+
+def test_cli_aceita_provedores_novos(capsys):
+    assert main(["executar", "--provedor", "anthropic", "--modelo", "x", "--casos", "fantasma"]) == 2
+    assert "fantasma" in capsys.readouterr().err  # passou da validação do --provedor
 
 
 def test_subconjunto_com_casos(tmp_path):
