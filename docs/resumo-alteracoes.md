@@ -1,10 +1,10 @@
 # Resumo das alterações na plataforma
 
-*QA Autônomo Baseado em Especificação · atualizado em 2026-11-02*
+*QA Autônomo Baseado em Especificação · atualizado em 2026-11-22*
 
-O ponto de partida era um protótipo com 110 testes. O LLM extraía um modelo de estados simples, e o gerador produzia testes para dois sistemas exemplo (Login e Saque). Hoje são **380 testes passando**, o modelo de estados ficou mais rico e há uma avaliação que mede se os modelos estão **certos**, e não só bem formados.
+O ponto de partida era um protótipo com 110 testes. O LLM extraía um modelo de estados simples, e o gerador produzia testes para dois sistemas exemplo (Login e Saque). Hoje são **441 testes passando** (6 pulados), o modelo de estados ficou mais rico, há uma avaliação que mede se os modelos estão **certos**, e não só bem formados, e a extração pode usar quatro provedores de LLM.
 
-> **Atenção:** nada deste trabalho foi commitado ainda.
+> **Situação:** o trabalho está commitado na branch `feat/estabilizacao-fsm-avaliacao`, em dois commits sobre a `main`, e segue para revisão em PR.
 
 ---
 
@@ -17,7 +17,8 @@ O ponto de partida era um protótipo com 110 testes. O LLM extraía um modelo de
 |---|---|
 | `stabilize-pipeline` | ✅ Implementado e arquivado |
 | `fsm-model-v2` | ✅ Implementado e arquivado |
-| `add-reference-evaluation` | 🟡 13 de 14 tarefas; falta a revisão humana |
+| `add-reference-evaluation` | 🟡 Arquivado com 13 de 14 tarefas; falta a revisão em dupla (1.4) |
+| `add-llm-providers` | ✅ Implementado e arquivado (criado no projeto, fora dos 6 importados) |
 | `add-mbt-generator` | ⏳ Planejado, não iniciado |
 | `add-test-execution` | ⏳ Planejado, não iniciado |
 | `add-persistence` | ⏳ Planejado, não iniciado |
@@ -115,12 +116,35 @@ Os poucos modelos válidos estavam semanticamente errados. No MFA, o código era
 
 ---
 
-## 5. Limitações atuais
+## 5. Provedores de LLM (`add-llm-providers`)
+
+- **Registro:** `backend/provedores/` reúne quatro provedores (`ollama`, `gemini`, `openai_compat` e `anthropic`). A interface, a API, o `/saude` e a avaliação leem o mesmo registro.
+- **Anthropic:** usa o SDK oficial, com `claude-opus-5-5` por padrão e saída restrita ao esquema. Não envia temperatura nem semente, desliga as novas tentativas do SDK e deixa ligado, por padrão, o fallback de recusa do servidor (`ANTHROPIC_FALLBACK_RECUSA`). O esforço do modelo é configurável (`ANTHROPIC_EFFORT`).
+- **Compatível com OpenAI:** atende LM Studio, vLLM, o endpoint `/v1` do Ollama, OpenRouter e similares, com os modos de esquema `json_schema`, `json_object` e nenhum.
+- **API:** o modelo pode ser escolhido por requisição, `/gerar` aceita o flag `deterministico` e `/saude` traz uma entrada por provedor, sem expor as chaves.
+- **Configuração:** as variáveis estão em `.env.example`, sem valores secretos. As chaves reais ficam só no `.env`, que o git ignora.
+
+### Comparação no conjunto de desenvolvimento
+
+| Métrica | `ollama` / `llama3.1:8b` | `openai_compat` / `gemma4:12b` |
+|---|---|---|
+| Validade | 0,38 | 0,00 |
+| Propriedades satisfeitas | 0,15 | 0,00 |
+| Rodadas com timeout | 0,00 | 1,00 |
+| Duração média | 129 s | 362 s |
+
+O `gemma4:12b` estourou o tempo em todas as rodadas, então essa comparação não mede a qualidade dele. Detalhes em [`avaliacao/comparacao-desenvolvimento-20261102.md`](avaliacao/comparacao-desenvolvimento-20261102.md).
+
+---
+
+## 6. Limitações atuais
 
 ### Qualidade da extração
 
 - O Ollama local (8B) ainda gera modelos fracos: às vezes válidos, raramente corretos. A melhoria do modelo é o próximo passo previsto, comparada a esta linha de base.
 - O Gemini não pôde ser medido: a cota da chave acabou (429) e o serviço esteve instável (503). Um 503 do provedor hoje não é tentado de novo.
+- O provedor Anthropic foi implementado e é coberto por testes com cliente falso, mas ainda não há avaliação dele no benchmark.
+- O `gemma4:12b` via `openai_compat` estourou o tempo em todas as rodadas do conjunto de desenvolvimento, então não há medição de qualidade para ele.
 - O catálogo não informa quais estados são finais, e o LLM às vezes marca estados intermediários como finais.
 
 ### Geração de testes
@@ -143,20 +167,21 @@ Os poucos modelos válidos estavam semanticamente errados. No MFA, o código era
 
 ---
 
-## 6. Pendências que dependem da equipe
+## 7. Pendências que dependem da equipe
 
 1. **Revisão em dupla** dos 7 casos de teste, preenchendo a tabela em `benchmark/README.md`. Os 10 casos novos foram redigidos com apoio de IA e precisam de validação humana.
-2. **Commit** de todo o trabalho: três changes, mais de 30 arquivos novos ou alterados.
-3. **Cota do Gemini**, se a equipe quiser resultados com esse provedor.
+2. **Cota do Gemini**, se a equipe quiser resultados com esse provedor.
+3. **Avaliar o provedor Anthropic** no benchmark e comparar com a linha de base, para quem tiver uma chave com crédito.
 
 ---
 
-## 7. Números
+## 8. Números
 
 | Indicador | Antes | Agora |
 |---|---|---|
-| Testes automatizados | 110 | 380 |
-| Specs principais (OpenSpec) | 4 | 11 |
+| Testes automatizados | 110 | 441 (6 pulados) |
+| Specs principais (OpenSpec) | 4 | 13 |
+| Provedores de LLM | 2 | 4 |
 | Exemplos na interface | 2 | 5 |
 | Gabaritos / casos de referência | 2 | 4 gabaritos, 15 casos |
 | Modelos válidos com `llama3.1:8b` (5 exemplos) | 0 de 5 | 3 de 5 |

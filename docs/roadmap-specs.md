@@ -13,6 +13,8 @@ Os changes foram importados de `qa-autonomo-specs/` e reconciliados com o que o 
 | 5 | `add-test-execution` | — | `sistemas-exemplo`, `execucao-testes` | Contratos executáveis; prova de que os testes detectam defeitos |
 | 6 | `add-persistence` | `generation-history` | — | Camada SQLite + SQLAlchemy, histórico, `init_db.py` |
 
+O change `add-llm-providers` não faz parte do material original: foi criado no projeto e aplicado depois do change 3. Ele acrescenta os provedores Anthropic e compatível com OpenAI e modifica `llm-provider`, `generation-api` e `extracao-modelo`. Já está implementado e arquivado.
+
 ## O que mudou na reconciliação
 
 | Material original | Como ficou |
