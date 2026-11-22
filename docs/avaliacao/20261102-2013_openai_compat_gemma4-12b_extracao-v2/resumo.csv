@@ -1,0 +1,9 @@
+caso,conjunto,rodada,valido,timeout,tentativas,primeira_tentativa_valida,duracao_s,precisao_estados,recall_estados,precisao_transicoes,recall_transicoes,propriedades,erro
+agendamento-consulta,desenvolvimento,1,0,1,2,0,362.05,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 168s.
+assinatura-streaming,desenvolvimento,1,0,1,2,0,362.7,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 178s.
+carrinho,desenvolvimento,1,0,1,2,0,362.1,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 177s.
+login,desenvolvimento,1,0,1,2,0,362.7,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 178s.
+matricula-curso,desenvolvimento,1,0,1,2,0,362.05,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 178s.
+pedido-delivery,desenvolvimento,1,0,1,2,0,362.07,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 178s.
+recuperacao-senha,desenvolvimento,1,0,1,2,0,362.08,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 178s.
+transferencia-pix,desenvolvimento,1,0,1,2,0,362.11,0.0,0.0,0.0,0.0,0.0,O orçamento de 360s para a geração se esgotou após 2 tentativa(s). Último erro: OpenAI compatível: não respondeu em 178s.

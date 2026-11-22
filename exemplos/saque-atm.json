@@ -1,0 +1,29 @@
+{
+  "nome": "Saque em Caixa Eletrônico (canônico)",
+  "historia": "Como cliente do banco,\nQuero sacar dinheiro no caixa eletrônico,\nPara ter dinheiro em espécie.",
+  "criterios": "1. O cliente deve inserir o cartão e informar o PIN.\n2. O saque só é permitido se o valor for menor ou igual ao saldo.\n3. Após 3 PINs inválidos o cartão é retido.\n4. O valor deve ser múltiplo de 20 (cédulas disponíveis).",
+  "modelo": {
+    "analise": "Critério 1: o fluxo começa com a inserção do cartão e a autenticação pelo PIN. Critério 2: o saque depende de valor <= saldo; saldo é contexto e valor chega com o evento. Critério 3: a variável de estado tentativas conta PINs inválidos; no terceiro, o cartão é retido. Critério 4: o valor precisa satisfazer valor % 20 == 0; caso contrário o saque é recusado.",
+    "variaveis": [
+      {"nome": "tentativas", "tipo": "inteiro", "categoria": "estado", "valor_inicial": 0},
+      {"nome": "valor", "tipo": "decimal", "categoria": "entrada", "valor_inicial": null},
+      {"nome": "saldo", "tipo": "decimal", "categoria": "contexto", "valor_inicial": null}
+    ],
+    "estados": [
+      {"id": "Inicio", "rotulo": "Aguardando cartão", "tipo": "inicial"},
+      {"id": "AguardandoPin", "rotulo": "Aguardando PIN", "tipo": "intermediario"},
+      {"id": "Autenticado", "rotulo": "Autenticado", "tipo": "intermediario"},
+      {"id": "SaqueRealizado", "rotulo": "Saque realizado", "tipo": "final"},
+      {"id": "SaqueRecusado", "rotulo": "Saque recusado", "tipo": "final"},
+      {"id": "CartaoRetido", "rotulo": "Cartão retido", "tipo": "final"}
+    ],
+    "transicoes": [
+      {"id": "T1", "de": "Inicio", "evento": "inserir_cartao", "para": "AguardandoPin", "guarda": null, "acoes": [], "criterios": [1]},
+      {"id": "T2", "de": "AguardandoPin", "evento": "pin_valido", "para": "Autenticado", "guarda": null, "acoes": [], "criterios": [1]},
+      {"id": "T3", "de": "AguardandoPin", "evento": "pin_invalido", "para": "AguardandoPin", "guarda": "tentativas < 2", "acoes": ["tentativas += 1"], "criterios": [3]},
+      {"id": "T4", "de": "AguardandoPin", "evento": "pin_invalido", "para": "CartaoRetido", "guarda": "tentativas >= 2", "acoes": ["tentativas += 1"], "criterios": [3]},
+      {"id": "T5", "de": "Autenticado", "evento": "solicitar_saque", "para": "SaqueRealizado", "guarda": "valor <= saldo e valor % 20 == 0", "acoes": [], "criterios": [2, 4]},
+      {"id": "T6", "de": "Autenticado", "evento": "solicitar_saque", "para": "SaqueRecusado", "guarda": "valor > saldo ou valor % 20 != 0", "acoes": [], "criterios": [2, 4]}
+    ]
+  }
+}

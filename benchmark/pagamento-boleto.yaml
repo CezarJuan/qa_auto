@@ -1,0 +1,84 @@
+id: pagamento-boleto
+dominio: pagamentos
+conjunto: teste
+historia: |-
+  Como cliente,
+  Quero pagar um boleto pelo internet banking,
+  Para quitar minhas contas em dia.
+criterios:
+  1: O cliente informa o código de barras e o sistema exibe os dados do boleto.
+  2: O pagamento só é concluído se o saldo for suficiente para o valor do boleto.
+  3: Boletos vencidos há mais de 30 dias são recusados.
+  4: Após o pagamento, o comprovante fica disponível.
+
+gabarito:
+  analise: >-
+    Critério 1: informar o código exibe o boleto. Critério 2: confirmar só paga com saldo >= valor_boleto;
+    senão o pagamento é negado. Critério 3: com dias_vencido > 30 o boleto é recusado já na leitura.
+    Critério 4: depois do pagamento o comprovante é emitido.
+  variaveis:
+    - {nome: saldo, tipo: decimal, categoria: contexto, valor_inicial: null}
+    - {nome: valor_boleto, tipo: decimal, categoria: contexto, valor_inicial: null}
+    - {nome: dias_vencido, tipo: inteiro, categoria: contexto, valor_inicial: null}
+  estados:
+    - {id: AguardandoCodigo, rotulo: Aguardando código de barras, tipo: inicial}
+    - {id: BoletoExibido, rotulo: Boleto exibido, tipo: intermediario}
+    - {id: BoletoRecusado, rotulo: Boleto recusado, tipo: final}
+    - {id: Pago, rotulo: Boleto pago, tipo: intermediario}
+    - {id: SaldoInsuficiente, rotulo: Saldo insuficiente, tipo: final}
+    - {id: ComprovanteDisponivel, rotulo: Comprovante disponível, tipo: final}
+  transicoes:
+    - {id: T1, de: AguardandoCodigo, evento: informar_codigo, para: BoletoExibido, guarda: dias_vencido <= 30, acoes: [], criterios: [1, 3]}
+    - {id: T2, de: AguardandoCodigo, evento: informar_codigo, para: BoletoRecusado, guarda: dias_vencido > 30, acoes: [], criterios: [3]}
+    - {id: T3, de: BoletoExibido, evento: confirmar_pagamento, para: Pago, guarda: saldo >= valor_boleto, acoes: [], criterios: [2]}
+    - {id: T4, de: BoletoExibido, evento: confirmar_pagamento, para: SaldoInsuficiente, guarda: saldo < valor_boleto, acoes: [], criterios: [2]}
+    - {id: T5, de: Pago, evento: emitir_comprovante, para: ComprovanteDisponivel, guarda: null, acoes: [], criterios: [4]}
+
+sinonimos:
+  estados:
+    AguardandoCodigo: [Inicio, AguardandoCodigoBarras, InformandoCodigo]
+    BoletoExibido: [DadosExibidos, BoletoLido, ExibindoBoleto]
+    BoletoRecusado: [BoletoVencido, VencidoHaMaisDe30Dias]
+    Pago: [PagamentoConcluido, BoletoPago, PagamentoRealizado]
+    SaldoInsuficiente: [PagamentoNegado, PagamentoRecusado]
+    ComprovanteDisponivel: [ComprovanteEmitido, Comprovante]
+  eventos:
+    informar_codigo: [informar_codigo_barras, ler_codigo, digitar_codigo]
+    confirmar_pagamento: [pagar, pagar_boleto, confirmar]
+    emitir_comprovante: [gerar_comprovante, exibir_comprovante]
+  variaveis:
+    valor_boleto: [valor, valor_documento]
+    dias_vencido: [dias_atraso, dias_em_atraso, dias_desde_vencimento]
+    saldo: [saldo_conta, saldo_disponivel]
+
+propriedades:
+  - criterio: 1
+    descricao: Código informado exibe o boleto
+    contexto: {saldo: 500, valor_boleto: 100, dias_vencido: 0}
+    eventos: [{evento: informar_codigo}]
+    estado_esperado: BoletoExibido
+  - criterio: 2
+    descricao: Com saldo suficiente o pagamento é concluído
+    contexto: {saldo: 500, valor_boleto: 100, dias_vencido: 0}
+    eventos: [{evento: informar_codigo}, {evento: confirmar_pagamento}]
+    estado_esperado: Pago
+  - criterio: 2
+    descricao: Sem saldo suficiente o pagamento é negado
+    contexto: {saldo: 50, valor_boleto: 100, dias_vencido: 0}
+    eventos: [{evento: informar_codigo}, {evento: confirmar_pagamento}]
+    estado_esperado: SaldoInsuficiente
+  - criterio: 3
+    descricao: Boleto vencido há 31 dias é recusado
+    contexto: {saldo: 500, valor_boleto: 100, dias_vencido: 31}
+    eventos: [{evento: informar_codigo}]
+    estado_esperado: BoletoRecusado
+  - criterio: 3
+    descricao: Boleto vencido há exatamente 30 dias ainda é aceito
+    contexto: {saldo: 500, valor_boleto: 100, dias_vencido: 30}
+    eventos: [{evento: informar_codigo}]
+    estado_esperado: BoletoExibido
+  - criterio: 4
+    descricao: Depois do pagamento o comprovante fica disponível
+    contexto: {saldo: 500, valor_boleto: 100, dias_vencido: 0}
+    eventos: [{evento: informar_codigo}, {evento: confirmar_pagamento}, {evento: emitir_comprovante}]
+    estado_esperado: ComprovanteDisponivel

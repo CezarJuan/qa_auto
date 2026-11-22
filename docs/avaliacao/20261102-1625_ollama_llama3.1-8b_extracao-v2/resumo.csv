@@ -1,0 +1,85 @@
+caso,conjunto,rodada,valido,timeout,tentativas,primeira_tentativa_valida,duracao_s,precisao_estados,recall_estados,precisao_transicoes,recall_transicoes,propriedades,erro
+chamado-suporte,teste,1,0,0,3,0,127.5,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.0: O valor_inicial '""AAAA-MM-DD""' de 'data_abertura' não é do tipo data.
+- [esquema_invalido] variaveis.1: O valor_inicial '""AAAA-MM-DD""' de 'data_atual' não é do tipo data."
+chamado-suporte,teste,2,0,0,3,0,122.99,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.0: O valor_inicial '""AAAA-MM-DD""' de 'data_abertura' não é do tipo data.
+- [esquema_invalido] variaveis.1: O valor_inicial '""AAAA-MM-DD""' de 'data_atual' não é do tipo data."
+chamado-suporte,teste,3,0,0,3,0,122.72,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.0: O valor_inicial '""AAAA-MM-DD""' de 'data_abertura' não é do tipo data.
+- [esquema_invalido] variaveis.1: O valor_inicial '""AAAA-MM-DD""' de 'data_atual' não é do tipo data."
+cupom-promocional,teste,1,0,0,3,0,180.65,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 8 erro(s):
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T2 ('cupom_expirado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T3 ('valor_compra < 100') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = True, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T6 ('cupom_valido e data_atual <= validade e valor_compra >= 100 e não cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = False, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 100 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T3 ('valor_compra < 100') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, valor_compra = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_usado = True as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T6 ('cupom_valido e data_atual <= validade e valor_compra >= 100 e não cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_usado = False, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 100 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_compra < 100') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = True, valor_compra = 0 as duas são verdadeiras."
+cupom-promocional,teste,2,0,0,3,0,179.94,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 8 erro(s):
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T2 ('cupom_expirado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T3 ('valor_compra < 100') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = True, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T6 ('cupom_valido e data_atual <= validade e valor_compra >= 100 e não cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = False, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 100 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T3 ('valor_compra < 100') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, valor_compra = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_usado = True as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T6 ('cupom_valido e data_atual <= validade e valor_compra >= 100 e não cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_usado = False, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 100 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_compra < 100') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = True, valor_compra = 0 as duas são verdadeiras."
+cupom-promocional,teste,3,0,0,3,0,181.37,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 8 erro(s):
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T2 ('cupom_expirado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T3 ('valor_compra < 100') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = True, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T1 ('cupom_valido e data_atual <= validade') e T6 ('cupom_valido e data_atual <= validade e valor_compra >= 100 e não cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = False, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 100 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T3 ('valor_compra < 100') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, valor_compra = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_usado = True as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('cupom_expirado') e T6 ('cupom_valido e data_atual <= validade e valor_compra >= 100 e não cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_expirado = True, cupom_usado = False, cupom_valido = True, data_atual = 1999-12-31, validade = 1999-12-31, valor_compra = 100 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_compra < 100') e T4 ('cupom_usado') no par Carrinho / aplicar_cupom se sobrepõem: com cupom_usado = True, valor_compra = 0 as duas são verdadeiras."
+emprestimo-biblioteca,teste,1,0,0,3,0,151.29,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 2 erro(s):
+- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3 e não multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = False as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T4 ('multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras."
+emprestimo-biblioteca,teste,2,0,0,3,0,147.04,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 2 erro(s):
+- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3 e não multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = False as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T4 ('multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras."
+emprestimo-biblioteca,teste,3,0,0,3,0,148.22,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 2 erro(s):
+- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3 e não multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = False as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T4 ('multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras."
+mfa-bloqueio,teste,1,1,0,1,1,36.31,0.3333,0.25,0.0,0.0,0.0,
+mfa-bloqueio,teste,2,1,0,1,1,34.26,0.3333,0.25,0.0,0.0,0.0,
+mfa-bloqueio,teste,3,1,0,1,1,34.23,0.3333,0.25,0.0,0.0,0.0,
+pagamento-boleto,teste,1,0,0,3,0,142.29,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.0: O valor_inicial '0' de 'saldo' não é do tipo decimal.
+- [esquema_invalido] variaveis.1: O valor_inicial '' de 'valor_boleto' não é do tipo decimal.
+- [esquema_invalido] variaveis.2: O valor_inicial '' de 'data_vencimento' não é do tipo data.
+- [esquema_invalido] variaveis.3: O valor_inicial '' de 'data_atual' não é do tipo data."
+pagamento-boleto,teste,2,0,0,3,0,139.65,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.0: O valor_inicial '0' de 'saldo' não é do tipo decimal.
+- [esquema_invalido] variaveis.1: O valor_inicial '' de 'valor_boleto' não é do tipo decimal.
+- [esquema_invalido] variaveis.2: O valor_inicial '' de 'data_vencimento' não é do tipo data.
+- [esquema_invalido] variaveis.3: O valor_inicial '' de 'data_atual' não é do tipo data."
+pagamento-boleto,teste,3,0,0,3,0,140.87,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:
+- [esquema_invalido] variaveis.0: O valor_inicial '0' de 'saldo' não é do tipo decimal.
+- [esquema_invalido] variaveis.1: O valor_inicial '' de 'valor_boleto' não é do tipo decimal.
+- [esquema_invalido] variaveis.2: O valor_inicial '' de 'data_vencimento' não é do tipo data.
+- [esquema_invalido] variaveis.3: O valor_inicial '' de 'data_atual' não é do tipo data."
+reserva-hotel,teste,1,1,0,2,0,86.74,1.0,0.6667,0.0,0.0,0.0,
+reserva-hotel,teste,2,1,0,2,0,83.87,1.0,0.6667,0.0,0.0,0.0,
+reserva-hotel,teste,3,1,0,2,0,84.4,1.0,0.6667,0.0,0.0,0.0,
+saque-atm,teste,1,0,0,3,0,156.99,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 5 erro(s):
+- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T6 ('valor_saque % 20 != 0') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com valor_saque = -0.01 as duas são verdadeiras."
+saque-atm,teste,2,0,0,3,0,154.86,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 5 erro(s):
+- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T6 ('valor_saque % 20 != 0') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com valor_saque = -0.01 as duas são verdadeiras."
+saque-atm,teste,3,0,0,3,0,151.9,0.0,0.0,0.0,0.0,0.0,"Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 5 erro(s):
+- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0.01 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0 as duas são verdadeiras.
+- [guardas_sobrepostas] As guardas de T6 ('valor_saque % 20 != 0') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com valor_saque = -0.01 as duas são verdadeiras."

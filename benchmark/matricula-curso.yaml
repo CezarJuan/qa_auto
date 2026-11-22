@@ -1,0 +1,81 @@
+id: matricula-curso
+dominio: educacao
+conjunto: desenvolvimento
+historia: |-
+  Como aluno,
+  Quero me matricular em um curso online,
+  Para estudar no meu ritmo.
+criterios:
+  1: A matrícula só é feita se houver vagas na turma.
+  2: A matrícula fica pendente até a confirmação do pagamento.
+  3: Após o pagamento, o aluno tem acesso às aulas.
+  4: O aluno é aprovado ao concluir o curso com nota igual ou superior a 7.
+
+gabarito:
+  analise: >-
+    Critério 1: matricular exige vagas > 0. Critério 2: depois de matricular o aluno fica com pagamento
+    pendente e não pode concluir o curso. Critério 3: confirmar o pagamento libera o curso. Critério 4:
+    concluir com nota >= 7 aprova; abaixo de 7 reprova.
+  variaveis:
+    - {nome: vagas, tipo: inteiro, categoria: contexto, valor_inicial: null}
+    - {nome: nota, tipo: decimal, categoria: entrada, valor_inicial: null}
+  estados:
+    - {id: Inscricao, rotulo: Inscrição, tipo: inicial}
+    - {id: PagamentoPendente, rotulo: Pagamento pendente, tipo: intermediario}
+    - {id: Cursando, rotulo: Cursando, tipo: intermediario}
+    - {id: Aprovado, rotulo: Aprovado, tipo: final}
+    - {id: Reprovado, rotulo: Reprovado, tipo: final}
+  transicoes:
+    - {id: T1, de: Inscricao, evento: matricular, para: PagamentoPendente, guarda: vagas > 0, acoes: [], criterios: [1, 2]}
+    - {id: T2, de: PagamentoPendente, evento: confirmar_pagamento, para: Cursando, guarda: null, acoes: [], criterios: [2, 3]}
+    - {id: T3, de: Cursando, evento: concluir_curso, para: Aprovado, guarda: nota >= 7, acoes: [], criterios: [4]}
+    - {id: T4, de: Cursando, evento: concluir_curso, para: Reprovado, guarda: nota < 7, acoes: [], criterios: [4]}
+
+sinonimos:
+  estados:
+    Inscricao: [Inicio, SemMatricula, Inscrevendo]
+    PagamentoPendente: [MatriculaPendente, AguardandoPagamento, Pendente]
+    Cursando: [AcessoLiberado, EmAndamento, Matriculado]
+    Aprovado: [AlunoAprovado, Concluido]
+    Reprovado: [AlunoReprovado]
+  eventos:
+    matricular: [realizar_matricula, fazer_matricula, inscrever]
+    confirmar_pagamento: [pagamento_confirmado, pagar, pagamento_aprovado]
+    concluir_curso: [finalizar_curso, concluir, encerrar_curso]
+  variaveis:
+    vagas: [vagas_disponiveis, vagas_turma]
+    nota: [nota_final, media]
+
+propriedades:
+  - criterio: 1
+    descricao: Sem vagas a matrícula é recusada
+    contexto: {vagas: 0}
+    eventos: [{evento: matricular}]
+    recusado: true
+    estado_esperado: Inscricao
+  - criterio: 1
+    descricao: Com vagas a matrícula é feita
+    contexto: {vagas: 5}
+    eventos: [{evento: matricular}]
+    estado_esperado: PagamentoPendente
+  - criterio: 2
+    descricao: Sem pagamento não é possível concluir o curso
+    contexto: {vagas: 5}
+    eventos: [{evento: matricular}, {evento: concluir_curso, dados: {nota: 9}}]
+    recusado: true
+    estado_esperado: PagamentoPendente
+  - criterio: 3
+    descricao: O pagamento libera o acesso às aulas
+    contexto: {vagas: 5}
+    eventos: [{evento: matricular}, {evento: confirmar_pagamento}]
+    estado_esperado: Cursando
+  - criterio: 4
+    descricao: Nota 7 aprova
+    contexto: {vagas: 5}
+    eventos: [{evento: matricular}, {evento: confirmar_pagamento}, {evento: concluir_curso, dados: {nota: 7}}]
+    estado_esperado: Aprovado
+  - criterio: 4
+    descricao: Nota 6,9 reprova
+    contexto: {vagas: 5}
+    eventos: [{evento: matricular}, {evento: confirmar_pagamento}, {evento: concluir_curso, dados: {nota: 6.9}}]
+    estado_esperado: Reprovado

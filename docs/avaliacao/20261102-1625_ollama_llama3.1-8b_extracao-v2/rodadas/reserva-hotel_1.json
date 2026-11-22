@@ -1,0 +1,187 @@
+{
+  "caso": "reserva-hotel",
+  "conjunto": "teste",
+  "rodada": 1,
+  "valido": true,
+  "timeout": false,
+  "tentativas": 2,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 86.74,
+  "precisao_estados": 1.0,
+  "recall_estados": 0.6667,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "",
+  "detalhes_propriedades": [
+    {
+      "descricao": "Com quarto disponível a reserva fica pendente",
+      "criterio": 1,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: selecionar_datas"
+    },
+    {
+      "descricao": "Sem quarto disponível a reserva não é criada",
+      "criterio": 1,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: selecionar_datas"
+    },
+    {
+      "descricao": "Pagamento aprovado confirma a reserva",
+      "criterio": 2,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: selecionar_datas"
+    },
+    {
+      "descricao": "Fim do prazo expira a reserva pendente",
+      "criterio": 3,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: selecionar_datas"
+    },
+    {
+      "descricao": "Pagamento depois de expirar é recusado",
+      "criterio": 3,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: selecionar_datas"
+    },
+    {
+      "descricao": "Cancelar com 10 dias de antecedência é permitido",
+      "criterio": 4,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: selecionar_datas"
+    },
+    {
+      "descricao": "Cancelar com 3 dias de antecedência é recusado",
+      "criterio": 4,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: selecionar_datas"
+    }
+  ],
+  "nao_mapeados": {
+    "eventos": [
+      "quarto_disponivel",
+      "quarto_nao_disponivel",
+      "pagamento_nao_aprovado",
+      "cancelamento"
+    ],
+    "variaveis": [
+      "horas_atestadas",
+      "dias_antes_checkin"
+    ]
+  },
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 39.88369610000154,
+      "erro": "O modelo tem 1 erro(s):\n- [criterio_nao_coberto] O critério 4 não está representado em nenhuma transição."
+    },
+    {
+      "resultado": "valido",
+      "duracao": 46.852992600001016,
+      "erro": ""
+    }
+  ],
+  "modelo": {
+    "analise": "Critério 1: se houver quarto disponível, a reserva fica pendente de pagamento. Critério 2: pagamento aprovado confirma a reserva. Critério 3: se o pagamento não for feito em até 2 horas, a reserva expira. Critério 4: reservas confirmadas podem ser canceladas sem custo até 7 dias antes do check-in.",
+    "variaveis": [
+      {
+        "nome": "horas_atestadas",
+        "tipo": "inteiro",
+        "categoria": "estado",
+        "valor_inicial": 0
+      },
+      {
+        "nome": "dias_antes_checkin",
+        "tipo": "inteiro",
+        "categoria": "estado",
+        "valor_inicial": 0
+      }
+    ],
+    "estados": [
+      {
+        "id": "ReservaPendente",
+        "rotulo": "Reserva pendente",
+        "tipo": "inicial"
+      },
+      {
+        "id": "ReservaConfirmada",
+        "rotulo": "Reserva confirmada",
+        "tipo": "intermediario"
+      },
+      {
+        "id": "ReservaExpirada",
+        "rotulo": "Reserva expirada",
+        "tipo": "final"
+      },
+      {
+        "id": "ReservaCancelada",
+        "rotulo": "Reserva cancelada",
+        "tipo": "final"
+      }
+    ],
+    "transicoes": [
+      {
+        "id": "T1",
+        "de": "ReservaPendente",
+        "evento": "quarto_disponivel",
+        "para": "ReservaConfirmada",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          1
+        ]
+      },
+      {
+        "id": "T2",
+        "de": "ReservaPendente",
+        "evento": "quarto_nao_disponivel",
+        "para": "ReservaPendente",
+        "guarda": null,
+        "acoes": [],
+        "criterios": []
+      },
+      {
+        "id": "T3",
+        "de": "ReservaConfirmada",
+        "evento": "pagamento_aprovado",
+        "para": "ReservaConfirmada",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          2
+        ]
+      },
+      {
+        "id": "T4",
+        "de": "ReservaConfirmada",
+        "evento": "pagamento_nao_aprovado",
+        "para": "ReservaExpirada",
+        "guarda": "horas_atestadas >= 2",
+        "acoes": [],
+        "criterios": [
+          3
+        ]
+      },
+      {
+        "id": "T5",
+        "de": "ReservaConfirmada",
+        "evento": "cancelamento",
+        "para": "ReservaCancelada",
+        "guarda": "horas_atestadas < 7 e dias_antes_checkin >= 7",
+        "acoes": [],
+        "criterios": [
+          4
+        ]
+      },
+      {
+        "id": "T6",
+        "de": "ReservaConfirmada",
+        "evento": "cancelamento",
+        "para": "ReservaPendente",
+        "guarda": "horas_atestadas >= 7",
+        "acoes": [],
+        "criterios": []
+      }
+    ]
+  }
+}

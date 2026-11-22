@@ -1,0 +1,36 @@
+{
+  "caso": "pedido-delivery",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 185.11,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 4 erro(s):\n- [tipo_incompativel] Guarda de T3: Comparação entre tipos diferentes (booleano e texto).\n- [tipo_incompativel] Guarda de T4: Comparação entre tipos diferentes (booleano e texto).\n- [tipo_incompativel] Guarda de T10: Comparação entre tipos diferentes (booleano e texto).\n- [transicao_duplicada] As transições T3 e T10 são iguais (PedidoEnviado --restaurante_respondeu--> PedidoAceito). Remova uma delas.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 48.61664810000002,
+      "erro": "O modelo tem 6 erro(s):\n- [variavel_nao_declarada] A ação 'valor_pedido += valor_item' de T1 usa a variável 'valor_item', que não foi declarada.\n- [tipo_incompativel] Guarda de T3: Comparação entre tipos diferentes (booleano e texto).\n- [tipo_incompativel] Guarda de T4: Comparação entre tipos diferentes (booleano e texto).\n- [sem_caminho_ao_final] 'PedidoRecusado' é um beco sem saída: não tem transição de saída e não é final.\n- [sem_caminho_ao_final] 'PedidoCancelado' é um beco sem saída: não tem transição de saída e não é final.\n- [criterio_nao_coberto] O critério 2 não está representado em nenhuma transição."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 64.31585380000251,
+      "erro": "O modelo tem 3 erro(s):\n- [tipo_incompativel] Guarda de T3: Comparação entre tipos diferentes (booleano e texto).\n- [tipo_incompativel] Guarda de T4: Comparação entre tipos diferentes (booleano e texto).\n- [criterio_nao_coberto] O critério 2 não está representado em nenhuma transição."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 72.17531619999863,
+      "erro": "O modelo tem 4 erro(s):\n- [tipo_incompativel] Guarda de T3: Comparação entre tipos diferentes (booleano e texto).\n- [tipo_incompativel] Guarda de T4: Comparação entre tipos diferentes (booleano e texto).\n- [tipo_incompativel] Guarda de T10: Comparação entre tipos diferentes (booleano e texto).\n- [transicao_duplicada] As transições T3 e T10 são iguais (PedidoEnviado --restaurante_respondeu--> PedidoAceito). Remova uma delas."
+    }
+  ],
+  "modelo": null
+}

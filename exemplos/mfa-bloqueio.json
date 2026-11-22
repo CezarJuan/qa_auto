@@ -1,0 +1,24 @@
+{
+  "nome": "Autenticação MFA",
+  "historia": "Como usuário do internet banking,\nQuero confirmar meu acesso com um código enviado ao celular,\nPara proteger minha conta contra acessos indevidos.",
+  "criterios": "1. Após a senha correta, o sistema solicita o código de verificação.\n2. O código correto libera o acesso à conta.\n3. Um código incorreto permite nova tentativa.\n4. Três códigos incorretos seguidos bloqueiam o acesso.",
+  "modelo": {
+    "analise": "Critério 1: a senha correta leva à etapa do código. Critério 2: o código correto autentica. Critério 3: com menos de 2 erros anteriores, um código incorreto mantém a etapa do código e soma uma tentativa. Critério 4: com 2 erros anteriores, o terceiro código incorreto bloqueia. A variável de estado tentativas conta os códigos incorretos.",
+    "variaveis": [
+      {"nome": "tentativas", "tipo": "inteiro", "categoria": "estado", "valor_inicial": 0}
+    ],
+    "estados": [
+      {"id": "AguardandoSenha", "rotulo": "Aguardando senha", "tipo": "inicial"},
+      {"id": "AguardandoCodigo", "rotulo": "Aguardando código", "tipo": "intermediario"},
+      {"id": "Autenticado", "rotulo": "Autenticado", "tipo": "final"},
+      {"id": "Bloqueado", "rotulo": "Acesso bloqueado", "tipo": "final"}
+    ],
+    "transicoes": [
+      {"id": "T1", "de": "AguardandoSenha", "evento": "senha_correta", "para": "AguardandoCodigo", "guarda": null, "acoes": [], "criterios": [1]},
+      {"id": "T2", "de": "AguardandoSenha", "evento": "senha_incorreta", "para": "AguardandoSenha", "guarda": null, "acoes": [], "criterios": []},
+      {"id": "T3", "de": "AguardandoCodigo", "evento": "codigo_correto", "para": "Autenticado", "guarda": null, "acoes": [], "criterios": [2]},
+      {"id": "T4", "de": "AguardandoCodigo", "evento": "codigo_incorreto", "para": "AguardandoCodigo", "guarda": "tentativas < 2", "acoes": ["tentativas += 1"], "criterios": [3]},
+      {"id": "T5", "de": "AguardandoCodigo", "evento": "codigo_incorreto", "para": "Bloqueado", "guarda": "tentativas >= 2", "acoes": ["tentativas += 1"], "criterios": [4]}
+    ]
+  }
+}

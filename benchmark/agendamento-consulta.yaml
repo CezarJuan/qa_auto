@@ -1,0 +1,70 @@
+id: agendamento-consulta
+dominio: saude
+conjunto: desenvolvimento
+historia: |-
+  Como paciente,
+  Quero agendar uma consulta pelo aplicativo,
+  Para ser atendido sem ir à recepção.
+criterios:
+  1: O paciente escolhe um horário disponível e a consulta fica agendada.
+  2: Horários já ocupados não podem ser escolhidos.
+  3: A consulta pode ser cancelada até 24 horas antes do horário marcado.
+  4: Após o atendimento, a consulta é marcada como realizada.
+
+gabarito:
+  analise: >-
+    Critério 1: escolher um horário disponível agenda a consulta. Critério 2: horário ocupado não é aceito.
+    Critério 3: cancelar só vale com 24 horas ou mais de antecedência. Critério 4: registrar o atendimento
+    conclui a consulta.
+  variaveis:
+    - {nome: horario_disponivel, tipo: booleano, categoria: entrada, valor_inicial: null}
+    - {nome: horas_ate_consulta, tipo: inteiro, categoria: contexto, valor_inicial: null}
+  estados:
+    - {id: SemConsulta, rotulo: Sem consulta, tipo: inicial}
+    - {id: Agendada, rotulo: Consulta agendada, tipo: intermediario}
+    - {id: Cancelada, rotulo: Consulta cancelada, tipo: final}
+    - {id: Realizada, rotulo: Consulta realizada, tipo: final}
+  transicoes:
+    - {id: T1, de: SemConsulta, evento: escolher_horario, para: Agendada, guarda: horario_disponivel, acoes: [], criterios: [1, 2]}
+    - {id: T2, de: Agendada, evento: cancelar, para: Cancelada, guarda: horas_ate_consulta >= 24, acoes: [], criterios: [3]}
+    - {id: T3, de: Agendada, evento: registrar_atendimento, para: Realizada, guarda: null, acoes: [], criterios: [4]}
+
+sinonimos:
+  estados:
+    SemConsulta: [Inicio, AguardandoAgendamento, EscolhendoHorario]
+    Agendada: [ConsultaAgendada, Marcada]
+    Cancelada: [ConsultaCancelada]
+    Realizada: [ConsultaRealizada, Atendida, Concluida]
+  eventos:
+    escolher_horario: [agendar, selecionar_horario, agendar_consulta]
+    cancelar: [cancelar_consulta]
+    registrar_atendimento: [realizar_atendimento, atender, concluir_consulta]
+  variaveis:
+    horario_disponivel: [disponivel, horario_livre]
+    horas_ate_consulta: [antecedencia_horas, horas_restantes]
+
+propriedades:
+  - criterio: 1
+    descricao: Horário disponível agenda a consulta
+    eventos: [{evento: escolher_horario, dados: {horario_disponivel: true}}]
+    estado_esperado: Agendada
+  - criterio: 2
+    descricao: Horário ocupado é recusado
+    eventos: [{evento: escolher_horario, dados: {horario_disponivel: false}}]
+    recusado: true
+    estado_esperado: SemConsulta
+  - criterio: 3
+    descricao: Cancelar com 48 horas de antecedência é permitido
+    contexto: {horas_ate_consulta: 48}
+    eventos: [{evento: escolher_horario, dados: {horario_disponivel: true}}, {evento: cancelar}]
+    estado_esperado: Cancelada
+  - criterio: 3
+    descricao: Cancelar com menos de 24 horas é recusado
+    contexto: {horas_ate_consulta: 10}
+    eventos: [{evento: escolher_horario, dados: {horario_disponivel: true}}, {evento: cancelar}]
+    recusado: true
+    estado_esperado: Agendada
+  - criterio: 4
+    descricao: Registrar o atendimento conclui a consulta
+    eventos: [{evento: escolher_horario, dados: {horario_disponivel: true}}, {evento: registrar_atendimento}]
+    estado_esperado: Realizada

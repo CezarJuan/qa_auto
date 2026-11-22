@@ -1,0 +1,57 @@
+# Saque em Caixa Eletrônico (canônico do 5W2H). Gabarito em exemplos/saque-atm.json.
+id: saque-atm
+dominio: bancario
+conjunto: teste
+origem: exemplo:saque-atm
+
+sinonimos:
+  estados:
+    Inicio: [AguardandoCartao, Ocioso, CaixaLivre]
+    AguardandoPin: [AguardandoSenha, InformandoPin, ValidandoPin, SemErroPin]
+    Autenticado: [MenuPrincipal, ClienteAutenticado, PinValidado]
+    SaqueRealizado: [EntregandoNotas, SaqueConcluido, NotasEntregues]
+    SaqueRecusado: [SaldoInsuficiente, SaqueNegado, ValorInvalido]
+    CartaoRetido: [CartaoBloqueado]
+  eventos:
+    inserir_cartao: [inserir]
+    pin_valido: [pin_correto, informar_pin_correto, senha_correta]
+    pin_invalido: [pin_incorreto, informar_pin_invalido, senha_incorreta]
+    solicitar_saque: [sacar, solicitar_valor, informar_valor]
+  variaveis:
+    tentativas: [erros_pin, tentativas_pin, tentativas_invalidas]
+    saldo: [saldo_conta, saldo_disponivel]
+    valor: [valor_saque, valor_solicitado]
+
+propriedades:
+  - criterio: 1
+    descricao: Inserir o cartão leva à espera do PIN
+    eventos: [{evento: inserir_cartao}]
+    estado_esperado: AguardandoPin
+  - criterio: 1
+    descricao: PIN válido autentica o cliente
+    eventos: [{evento: inserir_cartao}, {evento: pin_valido}]
+    estado_esperado: Autenticado
+  - criterio: 2
+    descricao: Saque dentro do saldo é realizado
+    contexto: {saldo: 200}
+    eventos: [{evento: inserir_cartao}, {evento: pin_valido}, {evento: solicitar_saque, dados: {valor: 100}}]
+    estado_esperado: SaqueRealizado
+  - criterio: 2
+    descricao: Saque acima do saldo é recusado
+    contexto: {saldo: 100}
+    eventos: [{evento: inserir_cartao}, {evento: pin_valido}, {evento: solicitar_saque, dados: {valor: 120}}]
+    estado_esperado: SaqueRecusado
+  # Erro do explore: um único PIN errado retinha o cartão
+  - criterio: 3
+    descricao: Um PIN errado não retém o cartão
+    eventos: [{evento: inserir_cartao}, {evento: pin_invalido}]
+    estado_esperado: AguardandoPin
+  - criterio: 3
+    descricao: Três PINs errados retêm o cartão
+    eventos: [{evento: inserir_cartao}, {evento: pin_invalido}, {evento: pin_invalido}, {evento: pin_invalido}]
+    estado_esperado: CartaoRetido
+  - criterio: 4
+    descricao: Valor que não é múltiplo de 20 é recusado mesmo com saldo
+    contexto: {saldo: 500}
+    eventos: [{evento: inserir_cartao}, {evento: pin_valido}, {evento: solicitar_saque, dados: {valor: 110}}]
+    estado_esperado: SaqueRecusado

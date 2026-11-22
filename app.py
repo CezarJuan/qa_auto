@@ -1,3 +1,4 @@
+import hashlib
 import html
 import os
 import re
@@ -6,7 +7,28 @@ import time
 import requests
 import streamlit as st
 
-from demo_data import EXEMPLOS
+from backend.entrada import (
+    ErroImportacao,
+    extrair_requisitos_de_texto,
+    numerar_criterios,
+    total_criterios,
+    validar_entrada,
+)
+from backend.execucao import (
+    BUG_DETECTADO,
+    BUG_NAO_DETECTADO,
+    ERRO_EXECUCAO,
+    MODELO_DIVERGE,
+    Execucao,
+    ResultadoVariante,
+    executar_testes,
+)
+from backend.geracao import gerar_artefatos, modelo_para_mermaid
+from backend.provedores import REGISTRO as PROVEDORES
+from backend.schemas import MAX_CARACTERES, criterios_cobertos, estado_inicial
+from backend.servico import espera_maxima
+from demo_data import EXEMPLOS, modelo_de_referencia
+from sistemas_exemplo import SISTEMAS
 
 API_URL = os.getenv("QA_API_URL", "http://localhost:8000")
 
@@ -142,78 +164,110 @@ st.markdown(CSS, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------- lógica
-def modelo_para_mermaid(modelo: dict) -> str:
-    """Converte o modelo MBT em stateDiagram-v2 (visualização provisória)."""
-    linhas = ["stateDiagram-v2", f"    [*] --> {modelo['inicial']}"]
-    for t in modelo["transicoes"]:
-        evento = t["evento"].replace(":", " ")
-        linhas.append(f"    {t['de']} --> {t['para']} : {evento}")
-    return "\n".join(linhas)
+AVISO_DEMO = "Demonstração: modelo de referência, sem LLM"
+MENSAGENS_STATUS = {
+    422: "Requisição inválida",
+    500: "Erro interno no servidor",
+    502: "Falha no provedor de LLM",
+    504: "Tempo esgotado no servidor",
+}
 
 
-def chamar_backend(user_story: str, criterios: str, motor: str, api_key: str | None = None) -> dict:
-    """Envia os requisitos ao backend. Lança RuntimeError com mensagem amigável em caso de erro."""
+def mensagem_de_erro(resp) -> str:
+    """Mensagem legível para qualquer resposta de erro, com ou sem corpo JSON."""
     try:
-        payload = {
-            "user_story": user_story,
-            "criterios": criterios,
-            "motor": motor,
-        }
-        if api_key:
-            payload["api_key"] = api_key
+        corpo = resp.json()
+    except ValueError:
+        corpo = None
+    mensagem = None
+    if isinstance(corpo, dict):
+        mensagem = corpo.get("mensagem") or corpo.get("detail")
+        if isinstance(mensagem, list):
+            mensagem = "; ".join(str(d.get("msg", d)) for d in mensagem)
+    if not mensagem:
+        mensagem = MENSAGENS_STATUS.get(resp.status_code, "Erro no servidor")
+    return f"{mensagem} (status {resp.status_code})"
 
-        resp = requests.post(
-            f"{API_URL}/gerar",
-            json=payload,
-            timeout=180,
-        )
+
+def chamar_backend(
+    user_story: str,
+    criterios: str,
+    motor: str,
+    api_key: str | None = None,
+    sistema: str | None = None,
+    modelo: str | None = None,
+) -> dict:
+    """Envia os requisitos ao backend e devolve o corpo da resposta.
+
+    Lança RuntimeError com mensagem legível em qualquer falha, sem expor exceções ao usuário.
+    """
+    payload = {"user_story": user_story, "criterios": criterios, "motor": motor, "sistema": sistema}
+    if modelo:
+        payload["modelo"] = modelo
+    if api_key:
+        payload["api_key"] = api_key
+    try:
+        resp = requests.post(f"{API_URL}/gerar", json=payload, timeout=espera_maxima())
     except requests.ConnectionError:
         raise RuntimeError(
-            "Não foi possível conectar ao backend. Inicie-o com: uvicorn backend.main:app --reload "
+            "O backend está indisponível. Inicie-o com: `uvicorn backend.main:app --reload` "
             "ou ative o **Modo demonstração** na barra lateral."
         )
     except requests.Timeout:
-        raise RuntimeError("O backend demorou demais para responder.")
-    if resp.status_code == 200:
-        return resp.json()
-    detalhe = resp.json().get("detail", resp.text)
-    if isinstance(detalhe, list):  # erros de validação do Pydantic
-        detalhe = "; ".join(d.get("msg", "").replace("Value error, ", "") for d in detalhe)
-    raise RuntimeError(str(detalhe))
+        raise RuntimeError(f"O backend não respondeu em {espera_maxima()}s.")
+    except requests.RequestException as e:
+        raise RuntimeError(f"Falha na comunicação com o backend: {e}")
+    if resp.status_code != 200:
+        raise RuntimeError(mensagem_de_erro(resp))
+    try:
+        corpo = resp.json()
+        corpo["modelo"]
+    except (ValueError, KeyError, TypeError):
+        raise RuntimeError("O backend devolveu uma resposta em formato inesperado.")
+    return corpo
 
 
-def total_criterios(texto: str) -> int:
-    nums = re.findall(r"^\s*(\d+)\s*[.)\-:]", texto, flags=re.MULTILINE)
-    return len(set(nums)) if nums else len([l for l in texto.splitlines() if l.strip()])
+def motivo_recusa_demo(nome_exemplo: str, user_story: str, criterios: str) -> str | None:
+    """Na demonstração, só exemplos com modelo de referência e sem edição podem ser exibidos."""
+    exemplo = EXEMPLOS[nome_exemplo]
+    if (user_story.strip(), criterios.strip()) != (exemplo["user_story"].strip(), exemplo["criterios"].strip()):
+        return (
+            f"O texto na tela não corresponde ao exemplo “{nome_exemplo}”: ele foi editado ou digitado. "
+            "A demonstração só exibe exemplos sem edição. "
+            "Desative o **Modo demonstração** para processar texto livre."
+        )
+    if modelo_de_referencia(nome_exemplo) is None:
+        return (
+            f"O exemplo “{nome_exemplo}” ainda não tem modelo de referência, então não pode ser exibido "
+            "na demonstração. Desative o **Modo demonstração** para gerá-lo com o LLM."
+        )
+    return None
 
 
-def extrair_requisitos_de_texto(conteudo: str) -> tuple[str, str]:
-    """Tenta separar inteligentemente User Story e Critérios de Aceite de um arquivo."""
-    linhas = conteudo.strip().splitlines()
-    us_linhas, crit_linhas = [], []
-    secao_atual = "us"
-
-    for linha in linhas:
-        l_lower = linha.strip().lower()
-        if "critério" in l_lower or "criterio" in l_lower or "acceptance" in l_lower:
-            secao_atual = "crit"
-            continue
-        if ("user story" in l_lower or "estória" in l_lower or "história" in l_lower) and not crit_linhas:
-            secao_atual = "us"
-            continue
-
-        if secao_atual == "us":
-            us_linhas.append(linha)
-        else:
-            crit_linhas.append(linha)
-
-    us_final = "\n".join(us_linhas).strip()
-    crit_final = "\n".join(crit_linhas).strip()
-
-    if not crit_final:
-        # Se não encontrou divisão clara, mantém o texto principal como User Story
-        return us_final or conteudo, ""
-    return us_final, crit_final
+def importar_arquivo(arquivo) -> None:
+    """Preenche os campos só quando o arquivo muda, para que edições posteriores prevaleçam."""
+    if arquivo is None:
+        st.session_state.pop("arquivo_importado", None)
+        st.session_state.pop("importacao", None)
+        return
+    dados = arquivo.getvalue()
+    assinatura = f"{arquivo.name}:{hashlib.sha256(dados).hexdigest()}"
+    if st.session_state.get("arquivo_importado") == assinatura:
+        return
+    st.session_state["arquivo_importado"] = assinatura
+    try:
+        historia, criterios_importados = extrair_requisitos_de_texto(dados.decode("utf-8-sig"))
+    except UnicodeDecodeError:
+        st.session_state["importacao"] = ("erro", "O arquivo precisa estar em UTF-8.")
+        return
+    except ErroImportacao as e:
+        st.session_state["importacao"] = ("erro", str(e))
+        return
+    st.session_state["user_story"] = historia
+    st.session_state["criterios"] = criterios_importados
+    st.session_state.pop("resultado", None)
+    st.session_state.pop("execucao", None)
+    st.session_state["importacao"] = ("ok", f"Requisitos importados de {arquivo.name}.")
 
 
 def render_mermaid(mermaid_code: str):
@@ -244,11 +298,91 @@ def render_mermaid(mermaid_code: str):
     st.iframe(html_code, height=540)
 
 
+RESULTADO_TENTATIVA = {"valido": "✅ Válido", "invalido": "❌ Inválido", "timeout": "⏱️ Timeout"}
+CATEGORIA_VARIAVEL = {"estado": "Estado (muda por ações)", "entrada": "Entrada (vem com o evento)",
+                      "contexto": "Contexto (fixa no cenário)"}
+
+
+def render_analise(modelo: dict, historico: list[dict]):
+    """Análise do LLM, variáveis do modelo e tentativas da extração."""
+    st.markdown("**Análise dos critérios**")
+    st.write(modelo.get("analise") or "—")
+    st.markdown("**Variáveis**")
+    if modelo.get("variaveis"):
+        st.dataframe(
+            [
+                {"Nome": v["nome"], "Tipo": v["tipo"], "Categoria": CATEGORIA_VARIAVEL.get(v["categoria"], v["categoria"]),
+                 "Valor inicial": "—" if v.get("valor_inicial") is None else str(v["valor_inicial"])}
+                for v in modelo["variaveis"]
+            ],
+            width="stretch",
+            hide_index=True,
+        )
+    else:
+        st.caption("O modelo não declara variáveis: contagens são representadas por estados.")
+    if historico:
+        st.markdown("**Tentativas da extração**")
+        st.dataframe(
+            [
+                {"Tentativa": i, "Resultado": RESULTADO_TENTATIVA.get(t["resultado"], t["resultado"]),
+                 "Duração": f"{t['duracao']:.1f}s", "Erros": t.get("erro") or "—"}
+                for i, t in enumerate(historico, start=1)
+            ],
+            width="stretch",
+            hide_index=True,
+        )
+
+
+def nome_sistema(sistema_id: str) -> str:
+    return SISTEMAS[sistema_id].nome if sistema_id else "Nenhum (gerar só esqueleto)"
+
+
 def carregar_exemplo():
     ex = EXEMPLOS[st.session_state["exemplo"]]
     st.session_state["user_story"] = ex["user_story"]
     st.session_state["criterios"] = ex["criterios"]
+    st.session_state["sistema_alvo"] = ex["sistema"] or ""
     st.session_state.pop("resultado", None)
+    st.session_state.pop("execucao", None)
+
+
+def tabela_cenarios(resultado: ResultadoVariante) -> list[dict]:
+    return [
+        {"Cenário": c.nome, "Resultado": "✅ Passou" if c.passou else "❌ Falhou"}
+        for c in resultado.cenarios
+    ]
+
+
+def render_falhas(titulo: str, resultado: ResultadoVariante):
+    if resultado.falhas:
+        linhas = [f"- **{c.nome}:** {c.motivo}" for c in resultado.falhas]
+        st.markdown(f"**Falhas no {titulo}**\n" + "\n".join(linhas))
+
+
+def render_execucao(execucao: Execucao):
+    if execucao.veredito == ERRO_EXECUCAO:
+        motivo = execucao.correto.erro or execucao.bug.erro
+        st.error(f"**{ERRO_EXECUCAO}:** {motivo}", icon="🚨")
+        return
+    if execucao.veredito == BUG_DETECTADO:
+        st.success(f"**{BUG_DETECTADO}:** os testes passam no sistema correto e falham no sistema com bug.")
+    elif execucao.veredito == BUG_NAO_DETECTADO:
+        st.warning(f"**{BUG_NAO_DETECTADO}:** os testes passam nas duas variantes, então são insuficientes.")
+    elif execucao.veredito == MODELO_DIVERGE:
+        st.warning(f"**{MODELO_DIVERGE}:** há testes falhando no sistema correto. Revise o modelo gerado.")
+
+    col_correto, col_bug = st.columns(2)
+    with col_correto:
+        st.markdown("**Sistema correto**")
+        st.dataframe(tabela_cenarios(execucao.correto), width="stretch", hide_index=True)
+    with col_bug:
+        st.markdown("**Sistema com bug**")
+        if execucao.bug.erro:
+            st.caption(f"Sem resultado: {execucao.bug.erro}")
+        else:
+            st.dataframe(tabela_cenarios(execucao.bug), width="stretch", hide_index=True)
+    render_falhas("sistema correto", execucao.correto)
+    render_falhas("sistema com bug", execucao.bug)
 
 
 # estado inicial
@@ -257,14 +391,27 @@ if "user_story" not in st.session_state:
     st.session_state["exemplo"] = nome0
     st.session_state["user_story"] = EXEMPLOS[nome0]["user_story"]
     st.session_state["criterios"] = EXEMPLOS[nome0]["criterios"]
+    st.session_state["sistema_alvo"] = EXEMPLOS[nome0]["sistema"] or ""
 
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
     st.markdown("### ⚙️ Configurações")
-    modelo_selecionado = st.selectbox("Motor LLM", ["Gemini (Cloud)", "Ollama (Local)"])
+    provedor_id = st.selectbox(
+        "Motor LLM", list(PROVEDORES), key="provedor", format_func=lambda i: PROVEDORES[i].nome
+    )
+    provedor = PROVEDORES[provedor_id]
+    modelo_selecionado = provedor.nome
+    modelo_llm = st.text_input(
+        "Modelo (opcional)",
+        key="modelo_llm",
+        placeholder=provedor.modelo_padrao() or "defina OPENAI_COMPAT_MODEL",
+        help="Vazio usa o modelo configurado no .env para este provedor.",
+    )
+    if provedor.nuvem:
+        st.caption("☁️ Este provedor roda na nuvem: os requisitos digitados serão enviados a ele.")
 
     api_key_custom = None
-    if modelo_selecionado == "Gemini (Cloud)":
+    if provedor_id == "gemini":
         api_key_custom = st.text_input(
             "🔑 Chave API Gemini (opcional)",
             type="password",
@@ -278,6 +425,13 @@ with st.sidebar:
         help="Usa dados de exemplo rápidos, sem backend nem LLM. Desative para chamar a API real.",
     )
     st.selectbox("📚 Carregar exemplo", list(EXEMPLOS), key="exemplo", on_change=carregar_exemplo)
+    st.selectbox(
+        "🎯 Sistema alvo",
+        [*SISTEMAS, ""],
+        key="sistema_alvo",
+        format_func=nome_sistema,
+        help="Sistema contra o qual os testes rodam. Sem sistema, os artefatos são apenas esqueletos.",
+    )
     st.markdown("---")
     st.markdown(
         '<div class="about"><b>Fatec Cotia</b><br>Processamento de Linguagem Natural<br><br>'
@@ -311,65 +465,93 @@ with col_input:
 
     # 1. Upload de Arquivos
     with st.expander("📂 Importar arquivo (.txt, .md)", expanded=False):
+        st.caption("Use as seções `# História` e `# Critérios`.")
         uploaded_file = st.file_uploader(
             "Selecione um arquivo de requisitos",
             type=["txt", "md"],
-            help="Carrega o conteúdo diretamente nos campos de texto abaixo.",
+            key="arquivo",
+            help="Carrega o conteúdo nos campos abaixo. Edições feitas depois prevalecem.",
             label_visibility="collapsed",
         )
-        if uploaded_file is not None:
-            try:
-                conteudo = uploaded_file.read().decode("utf-8")
-                us_ext, crit_ext = extrair_requisitos_de_texto(conteudo)
-                if us_ext:
-                    st.session_state["user_story"] = us_ext
-                if crit_ext:
-                    st.session_state["criterios"] = crit_ext
-                st.success("Requisitos importados com sucesso! ✨")
-            except Exception as e:
-                st.error(f"Erro ao ler arquivo: {e}")
+        importar_arquivo(uploaded_file)
+        if "importacao" in st.session_state:
+            situacao, texto = st.session_state["importacao"]
+            if situacao == "ok":
+                st.success(texto, icon="✨")
+            else:
+                st.error(texto, icon="📄")
 
     user_story = st.text_area("User Story", key="user_story", height=120)
     criterios = st.text_area("Critérios de Aceite", key="criterios", height=180)
-    st.caption(f"{len(user_story)} / 2000 caracteres · {total_criterios(criterios)} critério(s) detectado(s)")
-    gerar_btn = st.button("🚀 Gerar Modelo e Testes", type="primary", width="stretch")
+    criterios_numerados = numerar_criterios(criterios)
+    st.caption(
+        f"História: {len(user_story.strip())}/{MAX_CARACTERES} · "
+        f"Critérios: {len(criterios_numerados)}/{MAX_CARACTERES} caracteres · "
+        f"{total_criterios(criterios)} critério(s)"
+    )
+    if criterios_numerados:
+        renumerado = criterios_numerados != "\n".join(l.strip() for l in criterios.splitlines() if l.strip())
+        with st.expander("🔢 Critérios numerados (como serão enviados)", expanded=renumerado):
+            # "1\." evita que o Markdown renumere a lista e esconda a numeração real
+            st.markdown("  \n".join(re.sub(r"^(\d+)\.", r"\1\\.", l) for l in criterios_numerados.splitlines()))
+    gerar_btn = st.button("🚀 Gerar Modelo e Testes", key="gerar", type="primary", width="stretch")
 
 if gerar_btn:
-    try:
-        t0 = time.perf_counter()
-        with st.status(f"Processando com {modelo_selecionado}…", expanded=True) as status:
-            if modo_demo:
-                for msg in (
-                    "Analisando User Story e critérios…",
-                    "Extraindo estados e transições…",
-                    "Validando coerência do grafo…",
-                    "Gerando cenários e scripts…",
-                ):
-                    st.write(f"⏳ {msg}")
-                    time.sleep(0.4)
-                ex = EXEMPLOS[st.session_state["exemplo"]]
-                resultado = {k: ex[k] for k in ("modelo", "gherkin", "pytest")}
-            else:
-                st.write("⏳ Consultando o backend e o LLM…")
-                resultado = {
-                    "modelo": chamar_backend(
-                        user_story,
-                        criterios,
-                        modelo_selecionado,
-                        api_key=api_key_custom or None,
-                    ),
-                    "gherkin": None,
-                    "pytest": None,
+    st.session_state.pop("execucao", None)
+    st.session_state.pop("resultado", None)
+    sistema_alvo = st.session_state["sistema_alvo"] or None
+    nome_exemplo = st.session_state["exemplo"]
+    erros_entrada = validar_entrada(user_story, criterios_numerados)
+    recusa = motivo_recusa_demo(nome_exemplo, user_story, criterios) if modo_demo and not erros_entrada else None
+    with col_output:
+        if erros_entrada:
+            st.error("\n\n".join(erros_entrada), icon="✋")
+        elif recusa:
+            st.warning(recusa, icon="🎬")
+        else:
+            try:
+                t0 = time.perf_counter()
+                with st.status(f"Processando com {modelo_selecionado}…", expanded=True) as status:
+                    if modo_demo:
+                        for msg in (
+                            "Carregando o modelo de referência do exemplo…",
+                            "Gerando cenários e scripts…",
+                        ):
+                            st.write(f"⏳ {msg}")
+                            time.sleep(0.3)
+                        modelo_gerado = modelo_de_referencia(nome_exemplo)
+                        tentativas, duracao_backend, historico = None, None, []
+                    else:
+                        st.write("⏳ Consultando o backend e o LLM…")
+                        resposta = chamar_backend(
+                            user_story,
+                            criterios_numerados,
+                            provedor_id,
+                            api_key=api_key_custom or None,
+                            sistema=sistema_alvo,
+                            modelo=modelo_llm.strip() or None,
+                        )
+                        modelo_gerado = resposta["modelo"]
+                        tentativas, duracao_backend = resposta.get("tentativas"), resposta.get("duracao")
+                        historico = resposta.get("historico") or []
+                        if resposta.get("modelo_llm"):
+                            modelo_selecionado = f"{provedor.nome} · {resposta['modelo_llm']}"
+                    status.update(label="Análise concluída ✅", state="complete", expanded=False)
+                duracao = time.perf_counter() - t0
+                st.session_state["resultado"] = {
+                    "modelo": modelo_gerado,
+                    "artefatos": gerar_artefatos(modelo_gerado, sistema_alvo),
+                    "sistema": sistema_alvo,
+                    "demo": modo_demo,
+                    "total_criterios": total_criterios(criterios_numerados),
+                    "tempo_execucao": f"{duracao:.2f}s",
+                    "motor_usado": modelo_selecionado,
+                    "tentativas": tentativas,
+                    "duracao_backend": duracao_backend,
+                    "historico": historico,
                 }
-            status.update(label="Análise concluída ✅", state="complete", expanded=False)
-        duracao = time.perf_counter() - t0
-        resultado["total_criterios"] = total_criterios(criterios)
-        resultado["tempo_execucao"] = f"{duracao:.2f}s"
-        resultado["motor_usado"] = modelo_selecionado
-        st.session_state["resultado"] = resultado
-    except RuntimeError as e:
-        st.session_state.pop("resultado", None)
-        st.error(str(e), icon="🚨")
+            except RuntimeError as e:
+                st.error(str(e), icon="🚨")
 
 with col_output:
     st.markdown('<div class="card-title">📦 Artefatos Gerados <span class="badge">MBT &amp; BDD</span></div>',
@@ -384,7 +566,7 @@ with col_output:
         )
     else:
         modelo = res["modelo"]
-        cobertos = {t["criterio"] for t in modelo["transicoes"] if t.get("criterio") is not None}
+        cobertos = criterios_cobertos(modelo)
         total = res["total_criterios"]
         completo = total > 0 and len(cobertos) >= total
         tempo_ex = res.get("tempo_execucao", "—")
@@ -397,40 +579,60 @@ with col_output:
               <div class="metric"><div class="v">{len(modelo['transicoes'])}</div><div class="l">Transições</div></div>
               <div class="metric {'ok' if completo else 'warn'}"><div class="v">{len(cobertos)}/{total}</div>
                   <div class="l">Critérios</div></div>
-              <div class="metric info"><div class="v" style="font-size:1.1rem;padding-top:8px">{modelo['inicial']}</div>
+              <div class="metric info"><div class="v" style="font-size:1.1rem;padding-top:8px">{estado_inicial(modelo)}</div>
                   <div class="l">Inicial</div></div>
               <div class="metric"><div class="v" style="font-size:1.35rem;padding-top:4px">{tempo_ex}</div>
-                  <div class="l">Latência ({'Demo' if modo_demo else 'Real'})</div></div>
+                  <div class="l">Latência ({'Demo' if res['demo'] else 'Real'})</div></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
+        if res.get("tentativas"):
+            st.caption(
+                f"Backend: {res['tentativas']} tentativa(s) em {res['duracao_backend']:.1f}s com {motor_ex}."
+            )
 
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(
-            ["📊 Grafo", "🔀 Transições", "📝 BDD (Gherkin)", "💻 Pytest", "🧩 JSON"]
-        )
+        artefatos = res["artefatos"]
+        if res["sistema"]:
+            if st.button("▶️ Executar testes nas duas variantes", key="executar", type="primary"):
+                with st.spinner("Executando os testes…"):
+                    st.session_state["execucao"] = executar_testes(artefatos)
+            if "execucao" in st.session_state:
+                render_execucao(st.session_state["execucao"])
+        else:
+            st.info(
+                "Sem sistema alvo, os artefatos são esqueletos: os testes falham até um sistema ser conectado.",
+                icon="🧱",
+            )
+
+        abas = st.tabs(["📊 Grafo", "🧠 Análise", "🔀 Transições", "📝 BDD (Gherkin)", "💻 Pytest", "🧩 JSON"])
+        if res["demo"]:
+            for aba in abas:
+                with aba:
+                    st.info(AVISO_DEMO, icon="🎬")
+        tab1, tab_analise, tab2, tab3, tab4, tab5 = abas
         with tab1:
-            render_mermaid(modelo_para_mermaid(modelo))
+            codigo_mermaid = modelo_para_mermaid(modelo)
+            render_mermaid(codigo_mermaid)
+            with st.expander("📋 Código Mermaid (stateDiagram-v2)"):
+                st.code(codigo_mermaid, language="text")
+        with tab_analise:
+            render_analise(modelo, res.get("historico") or [])
         with tab2:
             linhas = [
-                {"De": t["de"], "Evento": t["evento"], "Para": t["para"],
-                 "Critério": f"#{t['criterio']}" if t.get("criterio") is not None else "—"}
+                {"Id": t["id"], "De": t["de"], "Evento": t["evento"], "Guarda": t.get("guarda") or "—",
+                 "Ações": "; ".join(t.get("acoes") or []) or "—", "Para": t["para"],
+                 "Critérios": ", ".join(f"#{n}" for n in t.get("criterios") or []) or "—"}
                 for t in modelo["transicoes"]
             ]
             st.dataframe(linhas, width="stretch", hide_index=True)
         with tab3:
-            if res["gherkin"]:
-                st.code(res["gherkin"], language="gherkin")
-                st.download_button("⬇️ Baixar .feature", data=res["gherkin"],
-                                   file_name="cenarios.feature", mime="text/plain")
-            else:
-                st.info("A geração de cenários Gherkin será adicionada em breve.", icon="🚧")
+            st.code(artefatos.feature, language="gherkin")
+            st.download_button(f"⬇️ Baixar {artefatos.nome_feature}", data=artefatos.feature,
+                               file_name=artefatos.nome_feature, mime="text/plain")
         with tab4:
-            if res["pytest"]:
-                st.code(res["pytest"], language="python")
-                st.download_button("⬇️ Baixar test_cenarios.py", data=res["pytest"],
-                                   file_name="test_cenarios.py", mime="text/x-python")
-            else:
-                st.info("A geração de scripts Pytest será adicionada em breve.", icon="🚧")
+            st.code(artefatos.script, language="python")
+            st.download_button(f"⬇️ Baixar {artefatos.nome_script}", data=artefatos.script,
+                               file_name=artefatos.nome_script, mime="text/x-python")
         with tab5:
             st.json(modelo)

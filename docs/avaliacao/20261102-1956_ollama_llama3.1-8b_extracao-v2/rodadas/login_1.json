@@ -1,0 +1,138 @@
+{
+  "caso": "login",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": true,
+  "timeout": false,
+  "tentativas": 2,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 68.72,
+  "precisao_estados": 1.0,
+  "recall_estados": 1.0,
+  "precisao_transicoes": 1.0,
+  "recall_transicoes": 0.6667,
+  "propriedades": 0.8,
+  "erro": "",
+  "detalhes_propriedades": [
+    {
+      "descricao": "Senha correta leva ao Dashboard",
+      "criterio": 1,
+      "satisfeita": true,
+      "motivo": ""
+    },
+    {
+      "descricao": "Senha correta depois de duas falhas ainda entra",
+      "criterio": 1,
+      "satisfeita": false,
+      "motivo": "terminou em DuasFalhas, esperado Dashboard"
+    },
+    {
+      "descricao": "Uma senha errada não bloqueia",
+      "criterio": 2,
+      "satisfeita": true,
+      "motivo": ""
+    },
+    {
+      "descricao": "Três senhas erradas bloqueiam a conta",
+      "criterio": 3,
+      "satisfeita": true,
+      "motivo": ""
+    },
+    {
+      "descricao": "Conta bloqueada recusa a senha correta",
+      "criterio": 3,
+      "satisfeita": true,
+      "motivo": ""
+    }
+  ],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 35.91519060000064,
+      "erro": "O modelo tem 1 erro(s):\n- [transicao_duplicada] As transições T1 e T5 são iguais (SemFalha --senha_correta--> Dashboard). Remova uma delas."
+    },
+    {
+      "resultado": "valido",
+      "duracao": 32.80597979999948,
+      "erro": ""
+    }
+  ],
+  "modelo": {
+    "analise": "Critério 1: senha correta leva ao Dashboard. Critério 2: senha incorreta mantém o cliente em SemFalha. Critério 3: com duas senhas erradas seguidas, a terceira senha incorreta leva à ContaBloqueada.",
+    "variaveis": [],
+    "estados": [
+      {
+        "id": "SemFalha",
+        "rotulo": "Deslogado",
+        "tipo": "inicial"
+      },
+      {
+        "id": "UmaFalha",
+        "rotulo": "Deslogado, após uma senha errada",
+        "tipo": "intermediario"
+      },
+      {
+        "id": "DuasFalhas",
+        "rotulo": "Deslogado, após duas senhas erradas seguidas",
+        "tipo": "intermediario"
+      },
+      {
+        "id": "ContaBloqueada",
+        "rotulo": "Conta bloqueada por excesso de tentativas",
+        "tipo": "final"
+      },
+      {
+        "id": "Dashboard",
+        "rotulo": "Autenticado, no painel da conta",
+        "tipo": "final"
+      }
+    ],
+    "transicoes": [
+      {
+        "id": "T1",
+        "de": "SemFalha",
+        "evento": "senha_correta",
+        "para": "Dashboard",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          1
+        ]
+      },
+      {
+        "id": "T2",
+        "de": "SemFalha",
+        "evento": "senha_incorreta",
+        "para": "UmaFalha",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          2
+        ]
+      },
+      {
+        "id": "T3",
+        "de": "UmaFalha",
+        "evento": "senha_incorreta",
+        "para": "DuasFalhas",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          2
+        ]
+      },
+      {
+        "id": "T4",
+        "de": "DuasFalhas",
+        "evento": "senha_incorreta",
+        "para": "ContaBloqueada",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          3
+        ]
+      }
+    ]
+  }
+}

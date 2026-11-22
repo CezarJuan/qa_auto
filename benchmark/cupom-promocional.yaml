@@ -1,0 +1,52 @@
+# Cupom Promocional em E-commerce (canônico do 5W2H). Gabarito em exemplos/cupom-promocional.json.
+id: cupom-promocional
+dominio: ecommerce
+conjunto: teste
+origem: exemplo:cupom-promocional
+
+sinonimos:
+  estados:
+    CarrinhoSemCupom: [Carrinho, CarrinhoAberto, AguardandoCupom]
+    DescontoAplicado: [CupomAplicado, CupomValido, CupomAceito]
+    CupomExpirado: [CupomVencido]
+    ValorInsuficiente: [ValorMinimoNaoAtingido, CompraAbaixoDoMinimo, ValorAbaixoDoMinimo]
+    CupomJaUtilizado: [CupomUsado, CupomJaUsado]
+  eventos:
+    aplicar_cupom: [inserir_cupom, usar_cupom, informar_cupom, validar_cupom]
+  variaveis:
+    data_atual: [hoje, data, data_compra]
+    validade: [data_validade, validade_cupom, data_expiracao]
+    valor_compra: [total_compra, valor_total, total, valor_carrinho]
+    cupom_usado: [ja_utilizado, cupom_ja_usado, cupom_utilizado]
+
+propriedades:
+  - criterio: 1
+    descricao: Cupom válido aplica o desconto
+    contexto: {data_atual: "2026-11-01", validade: "2026-11-30", valor_compra: 150, cupom_usado: false}
+    eventos: [{evento: aplicar_cupom}]
+    estado_esperado: DescontoAplicado
+  - criterio: 1
+    descricao: Cupom no último dia da validade ainda vale
+    contexto: {data_atual: "2026-11-30", validade: "2026-11-30", valor_compra: 150, cupom_usado: false}
+    eventos: [{evento: aplicar_cupom}]
+    estado_esperado: DescontoAplicado
+  - criterio: 2
+    descricao: Cupom expirado é recusado
+    contexto: {data_atual: "2026-12-01", validade: "2026-11-30", valor_compra: 150, cupom_usado: false}
+    eventos: [{evento: aplicar_cupom}]
+    estado_esperado: CupomExpirado
+  - criterio: 3
+    descricao: Compra abaixo de 100 não recebe desconto
+    contexto: {data_atual: "2026-11-01", validade: "2026-11-30", valor_compra: 99.9, cupom_usado: false}
+    eventos: [{evento: aplicar_cupom}]
+    estado_esperado: ValorInsuficiente
+  - criterio: 3
+    descricao: Compra de exatamente 100 recebe desconto
+    contexto: {data_atual: "2026-11-01", validade: "2026-11-30", valor_compra: 100, cupom_usado: false}
+    eventos: [{evento: aplicar_cupom}]
+    estado_esperado: DescontoAplicado
+  - criterio: 4
+    descricao: Cupom já usado pelo cliente é recusado
+    contexto: {data_atual: "2026-11-01", validade: "2026-11-30", valor_compra: 150, cupom_usado: true}
+    eventos: [{evento: aplicar_cupom}]
+    estado_esperado: CupomJaUtilizado
