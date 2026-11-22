@@ -1,0 +1,151 @@
+{
+  "caso": "matricula-curso",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": true,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 107.51,
+  "precisao_estados": 0.5,
+  "recall_estados": 0.4,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "",
+  "detalhes_propriedades": [
+    {
+      "descricao": "Sem vagas a matrícula é recusada",
+      "criterio": 1,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: matricular"
+    },
+    {
+      "descricao": "Com vagas a matrícula é feita",
+      "criterio": 1,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: matricular"
+    },
+    {
+      "descricao": "Sem pagamento não é possível concluir o curso",
+      "criterio": 2,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: matricular"
+    },
+    {
+      "descricao": "O pagamento libera o acesso às aulas",
+      "criterio": 3,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: matricular"
+    },
+    {
+      "descricao": "Nota 7 aprova",
+      "criterio": 4,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: matricular"
+    },
+    {
+      "descricao": "Nota 6,9 reprova",
+      "criterio": 4,
+      "satisfeita": false,
+      "motivo": "evento não mapeado: matricular"
+    }
+  ],
+  "nao_mapeados": {
+    "estados": [
+      "TurmaVaga",
+      "AulasDisponiveis"
+    ],
+    "eventos": [
+      "matricula_feita",
+      "pagamento_feito",
+      "curso_concluido"
+    ]
+  },
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 36.729577699999936,
+      "erro": "O modelo tem 2 erro(s):\n- [criterio_nao_coberto] O critério 3 não está representado em nenhuma transição.\n- [transicao_duplicada] As transições T1 e T4 são iguais (TurmaVaga --matricula_feita--> MatriculaPendente). Remova uma delas."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 36.98998899999788,
+      "erro": "O modelo tem 1 erro(s):\n- [transicao_duplicada] As transições T2 e T4 são iguais (MatriculaPendente --pagamento_feito--> AulasDisponiveis). Remova uma delas."
+    },
+    {
+      "resultado": "valido",
+      "duracao": 33.78759999999966,
+      "erro": ""
+    }
+  ],
+  "modelo": {
+    "analise": "Critério 1: matrícula só é feita se houver vagas na turma (TurmaVaga). Critério 2: matrícula fica pendente até a confirmação do pagamento (MatriculaPendente). Critério 3: pagamento feito leva ao acesso às aulas (AulasDisponiveis). Critério 4: nota igual ou superior a 7 leva à aprovação (Aprovado).",
+    "variaveis": [
+      {
+        "nome": "nota",
+        "tipo": "decimal",
+        "categoria": "estado",
+        "valor_inicial": 0
+      }
+    ],
+    "estados": [
+      {
+        "id": "TurmaVaga",
+        "rotulo": "Turma com vagas",
+        "tipo": "inicial"
+      },
+      {
+        "id": "MatriculaPendente",
+        "rotulo": "Matrícula pendente",
+        "tipo": "intermediario"
+      },
+      {
+        "id": "AulasDisponiveis",
+        "rotulo": "Aulas disponíveis",
+        "tipo": "intermediario"
+      },
+      {
+        "id": "Aprovado",
+        "rotulo": "Aprovado",
+        "tipo": "final"
+      }
+    ],
+    "transicoes": [
+      {
+        "id": "T1",
+        "de": "TurmaVaga",
+        "evento": "matricula_feita",
+        "para": "MatriculaPendente",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          1
+        ]
+      },
+      {
+        "id": "T2",
+        "de": "MatriculaPendente",
+        "evento": "pagamento_feito",
+        "para": "AulasDisponiveis",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          2,
+          3
+        ]
+      },
+      {
+        "id": "T3",
+        "de": "AulasDisponiveis",
+        "evento": "curso_concluido",
+        "para": "Aprovado",
+        "guarda": "nota >= 7",
+        "acoes": [],
+        "criterios": [
+          4
+        ]
+      }
+    ]
+  }
+}

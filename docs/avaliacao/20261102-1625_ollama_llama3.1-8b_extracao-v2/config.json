@@ -1,0 +1,18 @@
+{
+  "provedor": "ollama",
+  "modelo": "llama3.1:8b",
+  "rodadas": 3,
+  "conjunto": "teste",
+  "casos": null,
+  "versao_prompt": "extracao-v2",
+  "alinhamento_semantico": false,
+  "casos_avaliados": [
+    "chamado-suporte",
+    "cupom-promocional",
+    "emprestimo-biblioteca",
+    "mfa-bloqueio",
+    "pagamento-boleto",
+    "reserva-hotel",
+    "saque-atm"
+  ]
+}

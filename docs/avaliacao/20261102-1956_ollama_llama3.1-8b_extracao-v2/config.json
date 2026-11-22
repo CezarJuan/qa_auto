@@ -1,0 +1,20 @@
+{
+  "provedor": "ollama",
+  "modelo": "llama3.1:8b",
+  "rodadas": 1,
+  "conjunto": "desenvolvimento",
+  "casos": null,
+  "versao_prompt": "extracao-v2",
+  "alinhamento_semantico": false,
+  "casos_avaliados": [
+    "agendamento-consulta",
+    "assinatura-streaming",
+    "carrinho",
+    "login",
+    "matricula-curso",
+    "pedido-delivery",
+    "recuperacao-senha",
+    "transferencia-pix"
+  ],
+  "deterministico": true
+}

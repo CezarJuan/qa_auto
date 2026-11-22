@@ -1,0 +1,36 @@
+{
+  "caso": "pagamento-boleto",
+  "conjunto": "teste",
+  "rodada": 1,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 142.29,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.1: O valor_inicial '' de 'valor_boleto' não é do tipo decimal.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'data_vencimento' não é do tipo data.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'data_atual' não é do tipo data.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 43.52470499999981,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0.00' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.1: O valor_inicial '' de 'valor_boleto' não é do tipo decimal.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'data_vencimento' não é do tipo data.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'data_atual' não é do tipo data."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 49.77203920000102,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0.00' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.1: O valor_inicial '' de 'valor_boleto' não é do tipo decimal.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'data_vencimento' não é do tipo data.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'data_atual' não é do tipo data."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 48.99290729999848,
+      "erro": "Estrutura inválida:\n- [esquema_invalido] variaveis.0: O valor_inicial '0' de 'saldo' não é do tipo decimal.\n- [esquema_invalido] variaveis.1: O valor_inicial '' de 'valor_boleto' não é do tipo decimal.\n- [esquema_invalido] variaveis.2: O valor_inicial '' de 'data_vencimento' não é do tipo data.\n- [esquema_invalido] variaveis.3: O valor_inicial '' de 'data_atual' não é do tipo data."
+    }
+  ],
+  "modelo": null
+}

@@ -1,0 +1,156 @@
+{
+  "caso": "mfa-bloqueio",
+  "conjunto": "teste",
+  "rodada": 1,
+  "valido": true,
+  "timeout": false,
+  "tentativas": 1,
+  "primeira_tentativa_valida": true,
+  "duracao_s": 36.31,
+  "precisao_estados": 0.3333,
+  "recall_estados": 0.25,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "",
+  "detalhes_propriedades": [
+    {
+      "descricao": "Senha correta leva à etapa do código",
+      "criterio": 1,
+      "satisfeita": false,
+      "motivo": "estado não mapeado: AguardandoCodigo"
+    },
+    {
+      "descricao": "Código correto libera o acesso",
+      "criterio": 2,
+      "satisfeita": false,
+      "motivo": "estado não mapeado: Autenticado"
+    },
+    {
+      "descricao": "Um código incorreto permite nova tentativa",
+      "criterio": 3,
+      "satisfeita": false,
+      "motivo": "estado não mapeado: AguardandoCodigo"
+    },
+    {
+      "descricao": "Depois de um erro, o código correto ainda autentica",
+      "criterio": 3,
+      "satisfeita": false,
+      "motivo": "estado não mapeado: Autenticado"
+    },
+    {
+      "descricao": "Dois códigos incorretos ainda não bloqueiam",
+      "criterio": 4,
+      "satisfeita": false,
+      "motivo": "estado não mapeado: AguardandoCodigo"
+    },
+    {
+      "descricao": "Três códigos incorretos seguidos bloqueiam",
+      "criterio": 4,
+      "satisfeita": false,
+      "motivo": "terminou em AcessoPendente, esperado AcessoBloqueado"
+    }
+  ],
+  "nao_mapeados": {
+    "estados": [
+      "AcessoConcedido",
+      "AcessoPendente"
+    ],
+    "variaveis": [
+      "codigo_atual"
+    ]
+  },
+  "historico": [
+    {
+      "resultado": "valido",
+      "duracao": 36.31119079999917,
+      "erro": ""
+    }
+  ],
+  "modelo": {
+    "analise": "Critério 1: senha correta leva ao código de verificação. Critério 2: código correto libera o acesso. Critério 3: código incorreto permite nova tentativa. Critério 4: três códigos incorretos seguidos bloqueiam o acesso. As variáveis de estado tentativas e codigo_atual contam os erros e o código atual.",
+    "variaveis": [
+      {
+        "nome": "tentativas",
+        "tipo": "inteiro",
+        "categoria": "estado",
+        "valor_inicial": 0
+      },
+      {
+        "nome": "codigo_atual",
+        "tipo": "inteiro",
+        "categoria": "estado",
+        "valor_inicial": 0
+      }
+    ],
+    "estados": [
+      {
+        "id": "AcessoBloqueado",
+        "rotulo": "Acesso bloqueado",
+        "tipo": "final"
+      },
+      {
+        "id": "AcessoConcedido",
+        "rotulo": "Acesso concedido",
+        "tipo": "final"
+      },
+      {
+        "id": "AcessoPendente",
+        "rotulo": "Acesso pendente",
+        "tipo": "inicial"
+      }
+    ],
+    "transicoes": [
+      {
+        "id": "T1",
+        "de": "AcessoPendente",
+        "evento": "senha_correta",
+        "para": "AcessoPendente",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          1
+        ]
+      },
+      {
+        "id": "T2",
+        "de": "AcessoPendente",
+        "evento": "codigo_correto",
+        "para": "AcessoConcedido",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          2
+        ]
+      },
+      {
+        "id": "T3",
+        "de": "AcessoPendente",
+        "evento": "codigo_incorreto",
+        "para": "AcessoPendente",
+        "guarda": "tentativas < 3",
+        "acoes": [
+          "tentativas += 1",
+          "codigo_atual += 1"
+        ],
+        "criterios": [
+          3
+        ]
+      },
+      {
+        "id": "T4",
+        "de": "AcessoPendente",
+        "evento": "codigo_incorreto",
+        "para": "AcessoBloqueado",
+        "guarda": "tentativas >= 3",
+        "acoes": [
+          "tentativas += 1",
+          "codigo_atual += 1"
+        ],
+        "criterios": [
+          4
+        ]
+      }
+    ]
+  }
+}

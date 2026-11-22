@@ -1,0 +1,94 @@
+id: pedido-delivery
+dominio: delivery
+conjunto: desenvolvimento
+historia: |-
+  Como cliente,
+  Quero pedir comida pelo aplicativo de delivery,
+  Para receber a refeição em casa.
+criterios:
+  1: O pedido só é enviado ao restaurante se o valor mínimo de R$ 20,00 for atingido.
+  2: O restaurante pode aceitar ou recusar o pedido.
+  3: O cliente pode cancelar o pedido enquanto ele não sair para entrega.
+  4: O pedido é concluído quando o entregador confirma a entrega.
+
+gabarito:
+  analise: >-
+    Critério 1: enviar exige valor_pedido >= 20. Critério 2: no restaurante, aceitar leva ao preparo e recusar
+    encerra. Critério 3: cancelar é aceito aguardando o restaurante e em preparo, mas não depois do
+    despacho. Critério 4: a confirmação do entregador conclui o pedido.
+  variaveis:
+    - {nome: valor_pedido, tipo: decimal, categoria: contexto, valor_inicial: null}
+  estados:
+    - {id: Montando, rotulo: Montando o pedido, tipo: inicial}
+    - {id: AguardandoRestaurante, rotulo: Aguardando restaurante, tipo: intermediario}
+    - {id: EmPreparo, rotulo: Em preparo, tipo: intermediario}
+    - {id: SaiuParaEntrega, rotulo: Saiu para entrega, tipo: intermediario}
+    - {id: Entregue, rotulo: Entregue, tipo: final}
+    - {id: Recusado, rotulo: Recusado pelo restaurante, tipo: final}
+    - {id: Cancelado, rotulo: Cancelado pelo cliente, tipo: final}
+  transicoes:
+    - {id: T1, de: Montando, evento: enviar_pedido, para: AguardandoRestaurante, guarda: valor_pedido >= 20, acoes: [], criterios: [1]}
+    - {id: T2, de: AguardandoRestaurante, evento: aceitar, para: EmPreparo, guarda: null, acoes: [], criterios: [2]}
+    - {id: T3, de: AguardandoRestaurante, evento: recusar, para: Recusado, guarda: null, acoes: [], criterios: [2]}
+    - {id: T4, de: AguardandoRestaurante, evento: cancelar, para: Cancelado, guarda: null, acoes: [], criterios: [3]}
+    - {id: T5, de: EmPreparo, evento: cancelar, para: Cancelado, guarda: null, acoes: [], criterios: [3]}
+    - {id: T6, de: EmPreparo, evento: despachar, para: SaiuParaEntrega, guarda: null, acoes: [], criterios: []}
+    - {id: T7, de: SaiuParaEntrega, evento: confirmar_entrega, para: Entregue, guarda: null, acoes: [], criterios: [4]}
+
+sinonimos:
+  estados:
+    Montando: [Carrinho, MontandoPedido, Inicio]
+    AguardandoRestaurante: [PedidoEnviado, AguardandoConfirmacao, AguardandoAceite]
+    EmPreparo: [Preparando, PedidoAceito]
+    SaiuParaEntrega: [EmEntrega, EmRota, ACaminho]
+    Entregue: [PedidoEntregue, Concluido]
+    Recusado: [PedidoRecusado]
+    Cancelado: [PedidoCancelado]
+  eventos:
+    enviar_pedido: [enviar, fazer_pedido, confirmar_pedido]
+    aceitar: [aceitar_pedido, restaurante_aceita]
+    recusar: [recusar_pedido, restaurante_recusa]
+    cancelar: [cancelar_pedido]
+    despachar: [sair_para_entrega, enviar_entregador]
+    confirmar_entrega: [entregar, entrega_confirmada]
+  variaveis:
+    valor_pedido: [valor, total_pedido, valor_total]
+
+propriedades:
+  - criterio: 1
+    descricao: Pedido abaixo do mínimo não é enviado
+    contexto: {valor_pedido: 15}
+    eventos: [{evento: enviar_pedido}]
+    recusado: true
+    estado_esperado: Montando
+  - criterio: 1
+    descricao: Pedido de exatamente 20 reais é enviado
+    contexto: {valor_pedido: 20}
+    eventos: [{evento: enviar_pedido}]
+    estado_esperado: AguardandoRestaurante
+  - criterio: 2
+    descricao: Restaurante aceita o pedido
+    contexto: {valor_pedido: 50}
+    eventos: [{evento: enviar_pedido}, {evento: aceitar}]
+    estado_esperado: EmPreparo
+  - criterio: 2
+    descricao: Restaurante recusa o pedido
+    contexto: {valor_pedido: 50}
+    eventos: [{evento: enviar_pedido}, {evento: recusar}]
+    estado_esperado: Recusado
+  - criterio: 3
+    descricao: Cancelar em preparo é permitido
+    contexto: {valor_pedido: 50}
+    eventos: [{evento: enviar_pedido}, {evento: aceitar}, {evento: cancelar}]
+    estado_esperado: Cancelado
+  - criterio: 3
+    descricao: Cancelar depois do despacho é recusado
+    contexto: {valor_pedido: 50}
+    eventos: [{evento: enviar_pedido}, {evento: aceitar}, {evento: despachar}, {evento: cancelar}]
+    recusado: true
+    estado_esperado: SaiuParaEntrega
+  - criterio: 4
+    descricao: A confirmação do entregador conclui o pedido
+    contexto: {valor_pedido: 50}
+    eventos: [{evento: enviar_pedido}, {evento: aceitar}, {evento: despachar}, {evento: confirmar_entrega}]
+    estado_esperado: Entregue

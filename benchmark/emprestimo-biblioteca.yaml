@@ -1,0 +1,79 @@
+id: emprestimo-biblioteca
+dominio: biblioteca
+conjunto: teste
+historia: |-
+  Como leitor,
+  Quero pegar livros emprestados na biblioteca,
+  Para ler em casa.
+criterios:
+  1: O leitor pode pegar um livro emprestado se tiver menos de 3 livros em mãos.
+  2: O empréstimo pode ser renovado no máximo 2 vezes.
+  3: A devolução encerra o empréstimo.
+  4: Leitores com multa pendente não podem pegar livros.
+
+gabarito:
+  analise: >-
+    Critério 1: emprestar exige livros_em_maos < 3. Critério 4: também exige não multa_pendente. Critério 2:
+    a variável de estado renovacoes conta renovações, permitidas enquanto renovacoes < 2. Critério 3:
+    devolver encerra o empréstimo.
+  variaveis:
+    - {nome: livros_em_maos, tipo: inteiro, categoria: contexto, valor_inicial: null}
+    - {nome: multa_pendente, tipo: booleano, categoria: contexto, valor_inicial: null}
+    - {nome: renovacoes, tipo: inteiro, categoria: estado, valor_inicial: 0}
+  estados:
+    - {id: Disponivel, rotulo: Livro disponível, tipo: inicial}
+    - {id: Emprestado, rotulo: Livro emprestado, tipo: intermediario}
+    - {id: Devolvido, rotulo: Livro devolvido, tipo: final}
+  transicoes:
+    - {id: T1, de: Disponivel, evento: emprestar, para: Emprestado, guarda: livros_em_maos < 3 e não multa_pendente, acoes: [], criterios: [1, 4]}
+    - {id: T2, de: Emprestado, evento: renovar, para: Emprestado, guarda: renovacoes < 2, acoes: [renovacoes += 1], criterios: [2]}
+    - {id: T3, de: Emprestado, evento: devolver, para: Devolvido, guarda: null, acoes: [], criterios: [3]}
+
+sinonimos:
+  estados:
+    Disponivel: [Inicio, LivroDisponivel, NaEstante]
+    Emprestado: [LivroEmprestado, EmprestimoAtivo]
+    Devolvido: [LivroDevolvido, EmprestimoEncerrado, Encerrado]
+  eventos:
+    emprestar: [pegar_livro, realizar_emprestimo, retirar_livro]
+    renovar: [renovar_emprestimo]
+    devolver: [devolver_livro, realizar_devolucao]
+  variaveis:
+    livros_em_maos: [livros_emprestados, quantidade_livros, livros_ativos]
+    multa_pendente: [tem_multa, possui_multa, multa]
+    renovacoes: [quantidade_renovacoes, renovacoes_feitas]
+
+propriedades:
+  - criterio: 1
+    descricao: Leitor com 2 livros pode pegar mais um
+    contexto: {livros_em_maos: 2, multa_pendente: false}
+    eventos: [{evento: emprestar}]
+    estado_esperado: Emprestado
+  - criterio: 1
+    descricao: Leitor com 3 livros não pode pegar outro
+    contexto: {livros_em_maos: 3, multa_pendente: false}
+    eventos: [{evento: emprestar}]
+    recusado: true
+    estado_esperado: Disponivel
+  - criterio: 2
+    descricao: Duas renovações são permitidas
+    contexto: {livros_em_maos: 0, multa_pendente: false}
+    eventos: [{evento: emprestar}, {evento: renovar}, {evento: renovar}]
+    estado_esperado: Emprestado
+  - criterio: 2
+    descricao: A terceira renovação é recusada
+    contexto: {livros_em_maos: 0, multa_pendente: false}
+    eventos: [{evento: emprestar}, {evento: renovar}, {evento: renovar}, {evento: renovar}]
+    recusado: true
+    estado_esperado: Emprestado
+  - criterio: 3
+    descricao: Devolver encerra o empréstimo
+    contexto: {livros_em_maos: 0, multa_pendente: false}
+    eventos: [{evento: emprestar}, {evento: devolver}]
+    estado_esperado: Devolvido
+  - criterio: 4
+    descricao: Leitor com multa não pode pegar livros
+    contexto: {livros_em_maos: 0, multa_pendente: true}
+    eventos: [{evento: emprestar}]
+    recusado: true
+    estado_esperado: Disponivel

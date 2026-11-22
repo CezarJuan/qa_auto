@@ -1,0 +1,28 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Demo restrita aos exemplos com modelo de referência
+No modo demonstração, o sistema SHALL exibir resultado apenas para exemplos com modelo de referência ou gabarito cujo texto não foi editado. Para texto digitado, editado ou exemplo sem modelo de referência, SHALL NOT exibir modelo e SHALL informar o motivo.
+
+#### Scenario: Texto livre em modo demo
+- **WHEN** o modo demo está ativo e o usuário digita um requisito de boleto
+- **THEN** nenhum modelo é exibido
+- **AND** a interface informa que é preciso desativar a demonstração para processar texto livre
+
+#### Scenario: Exemplo editado em modo demo
+- **WHEN** o usuário carrega o exemplo de Login, altera um critério e gera no modo demo
+- **THEN** nenhum modelo é exibido e a interface informa que o exemplo foi editado
+
+#### Scenario: Exemplo sem modelo de referência
+- **WHEN** o usuário carrega um exemplo que não tem modelo de referência nem gabarito e gera no modo demo
+- **THEN** nenhum modelo é exibido e a interface informa que esse exemplo não tem modelo de referência
+
+#### Scenario: Exemplo com gabarito e sem sistema exemplo
+- **WHEN** o usuário carrega o exemplo do Cupom e gera no modo demo
+- **THEN** o gabarito do Cupom é exibido com o aviso de demonstração
+- **AND** os artefatos de teste são gerados como esqueleto
+
+#### Scenario: Exemplo com referência não editado
+- **WHEN** o modo demo está ativo e o usuário carrega o exemplo de Login sem editar
+- **THEN** o modelo de referência do Login é exibido com o aviso

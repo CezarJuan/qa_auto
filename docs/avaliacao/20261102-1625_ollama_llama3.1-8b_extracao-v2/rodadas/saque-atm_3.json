@@ -1,0 +1,36 @@
+{
+  "caso": "saque-atm",
+  "conjunto": "teste",
+  "rodada": 3,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 151.9,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 5 erro(s):\n- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T6 ('valor_saque % 20 != 0') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com valor_saque = -0.01 as duas são verdadeiras.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 44.844863400001486,
+      "erro": "O modelo tem 4 erro(s):\n- [criterio_nao_coberto] O critério 1 não está representado em nenhuma transição.\n- [criterio_nao_coberto] O critério 3 não está representado em nenhuma transição.\n- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0.01 as duas são verdadeiras."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 50.46409240000139,
+      "erro": "O modelo tem 2 erro(s):\n- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0.01 as duas são verdadeiras."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 56.58688860000257,
+      "erro": "O modelo tem 5 erro(s):\n- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T2 ('valor_saque <= saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = -0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T6 ('valor_saque % 20 != 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0.01 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T3 ('valor_saque > saldo') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com saldo = -0.01, valor_saque = 0 as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T6 ('valor_saque % 20 != 0') e T7 ('valor_saque <= 0') no par SaquePermitido / valor_saque se sobrepõem: com valor_saque = -0.01 as duas são verdadeiras."
+    }
+  ],
+  "modelo": null
+}

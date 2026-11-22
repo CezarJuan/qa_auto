@@ -1,80 +1,82 @@
-"""Clientes LLM (passo 1.3): Gemini e Ollama com a mesma assinatura."""
-import os
+"""Fachada dos provedores de LLM (registro em backend/provedores) e da saúde do Ollama.
+
+Mantém a assinatura `chamar_llm(motor, system, mensagens, api_key=None, timeout=None, modelo=None)`
+usada pelo serviço e pelos testes.
+"""
+import logging
 
 from dotenv import load_dotenv
 
-from .schemas import ModeloMBT
-
 load_dotenv()
 
-TEMPERATURA = 0.1
-TIMEOUT_SEGUNDOS = 90
+from . import provedores  # noqa: E402  (o .env precisa estar carregado antes)
+from .provedores import ollama as _ollama  # noqa: E402
+from .provedores.base import (  # noqa: E402,F401
+    SEMENTE_PADRAO,
+    TEMPERATURA,
+    TIMEOUT_PADRAO_SEGUNDOS,
+    ErroLLM,
+    ErroTimeout,
+    esquema_saida,
+    semente,
+    timeout_segundos,
+)
+from .provedores.gemini import MODELO_PADRAO as MODELO_GEMINI_PADRAO  # noqa: E402,F401
+from .provedores.gemini import chamar as _chamar_gemini_impl  # noqa: E402
+from .provedores.gemini import modelo_configurado as modelo_gemini  # noqa: E402,F401
+from .provedores.ollama import (  # noqa: E402,F401
+    AQUECIMENTO,
+    HOST_PADRAO as HOST_OLLAMA_PADRAO,
+    KEEP_ALIVE_PADRAO,
+    MODELO_PADRAO as MODELO_OLLAMA_PADRAO,
+    EstadoAquecimento,
+)
+from .provedores.ollama import host as host_ollama  # noqa: E402,F401
+from .provedores.ollama import modelo_configurado as modelo_ollama  # noqa: E402,F401
+
+log = logging.getLogger(__name__)
 
 
-class ErroLLM(Exception):
-    """Falha ao se comunicar com o motor LLM (chave, rede, serviço fora do ar...)."""
+def nome_do_modelo(motor: str, modelo: str | None = None) -> str:
+    """Modelo efetivo: o da requisição ou o configurado para o provedor."""
+    return provedores.obter(motor).modelo(modelo)
 
 
-def _chamar_gemini(system: str, mensagens: list[dict], api_key: str | None = None) -> str:
-    from google import genai
-    from google.genai import types
+def capacidades(motor: str, modelo: str | None = None) -> provedores.Capacidades:
+    provedor = provedores.obter(motor)
+    return provedor.capacidades(provedor.modelo(modelo))
 
-    chave = api_key or os.getenv("GEMINI_API_KEY")
-    if not chave:
-        raise ErroLLM(
-            "GEMINI_API_KEY não configurada. Defina-a no arquivo .env ou informe na barra lateral."
-        )
-    modelo = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-    contents = [
-        types.Content(
-            role="model" if m["role"] == "assistant" else "user",
-            parts=[types.Part(text=m["content"])],
-        )
-        for m in mensagens
-    ]
+
+def _chamar_gemini(system, mensagens, api_key=None, timeout=None, modelo=None) -> str:
+    return _chamar_gemini_impl(system, mensagens, api_key=api_key, timeout=timeout, modelo=modelo)
+
+
+def _chamar_ollama(system, mensagens, timeout=None, modelo=None) -> str:
+    return _ollama.chamar(system, mensagens, timeout=timeout, modelo=modelo)
+
+
+def chamar_llm(motor: str, system: str, mensagens: list[dict], api_key: str | None = None,
+               timeout: float | None = None, modelo: str | None = None) -> str:
     try:
-        client = genai.Client(
-            api_key=chave,
-            http_options=types.HttpOptions(timeout=TIMEOUT_SEGUNDOS * 1000),
-        )
-        resp = client.models.generate_content(
-            model=modelo,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=system,
-                temperature=TEMPERATURA,
-                response_mime_type="application/json",
-                response_schema=ModeloMBT,
-            ),
-        )
-        return resp.text or ""
-    except Exception as e:  # noqa: BLE001
-        raise ErroLLM(f"Erro ao chamar o Gemini: {e}") from e
+        provedor = provedores.obter(motor)
+    except ValueError as e:
+        raise ErroLLM(str(e)) from e
+    return provedor.chamar(system, mensagens, modelo=modelo, timeout=timeout, api_key=api_key)
 
 
-def _chamar_ollama(system: str, mensagens: list[dict]) -> str:
-    import ollama
-
-    modelo = os.getenv("OLLAMA_MODEL", "llama3.1")
-    host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-    try:
-        client = ollama.Client(host=host, timeout=TIMEOUT_SEGUNDOS)
-        resp = client.chat(
-            model=modelo,
-            messages=[{"role": "system", "content": system}, *mensagens],
-            format=ModeloMBT.model_json_schema(),
-            options={"temperature": TEMPERATURA},
-        )
-        return resp["message"]["content"]
-    except Exception as e:  # noqa: BLE001
-        raise ErroLLM(
-            f"Erro ao chamar o Ollama (o servidor está rodando e o modelo '{modelo}' foi baixado?): {e}"
-        ) from e
+# ---------------------------------------------------------------- saúde e aquecimento do Ollama
+def verificar_ollama() -> dict:
+    return _ollama.verificar()
 
 
-def chamar_llm(motor: str, system: str, mensagens: list[dict], api_key: str | None = None) -> str:
-    if motor == "Gemini (Cloud)":
-        return _chamar_gemini(system, mensagens, api_key=api_key)
-    if motor == "Ollama (Local)":
-        return _chamar_ollama(system, mensagens)
-    raise ErroLLM(f"Motor desconhecido: {motor}")
+def aquecer_ollama(estado: EstadoAquecimento = AQUECIMENTO) -> None:
+    _ollama.aquecer(estado)
+
+
+def iniciar_aquecimento(estado: EstadoAquecimento = AQUECIMENTO):
+    return _ollama.iniciar_aquecimento(estado)
+
+
+def saude_provedores() -> dict[str, dict]:
+    """Uma entrada por provedor do registro, sem segredos."""
+    return {ident: p.saude() for ident, p in provedores.REGISTRO.items()}

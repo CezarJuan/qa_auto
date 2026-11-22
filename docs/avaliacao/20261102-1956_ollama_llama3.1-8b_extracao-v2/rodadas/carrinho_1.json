@@ -1,0 +1,138 @@
+{
+  "caso": "carrinho",
+  "conjunto": "desenvolvimento",
+  "rodada": 1,
+  "valido": true,
+  "timeout": false,
+  "tentativas": 2,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 79.92,
+  "precisao_estados": 1.0,
+  "recall_estados": 1.0,
+  "precisao_transicoes": 0.75,
+  "recall_transicoes": 0.6,
+  "propriedades": 0.4,
+  "erro": "",
+  "detalhes_propriedades": [
+    {
+      "descricao": "Adicionar ao carrinho vazio deixa o carrinho com itens",
+      "criterio": 1,
+      "satisfeita": true,
+      "motivo": ""
+    },
+    {
+      "descricao": "Remover o último item esvazia o carrinho",
+      "criterio": 2,
+      "satisfeita": true,
+      "motivo": ""
+    },
+    {
+      "descricao": "Remover um de dois itens mantém o carrinho com itens",
+      "criterio": 2,
+      "satisfeita": false,
+      "motivo": "terminou em CarrinhoVazio, esperado CarrinhoComItens"
+    },
+    {
+      "descricao": "Finalizar com o carrinho vazio é recusado",
+      "criterio": 3,
+      "satisfeita": false,
+      "motivo": "o evento 'finalizar_compra' foi aceito, mas deveria ser recusado"
+    },
+    {
+      "descricao": "Finalizar com itens leva ao pagamento",
+      "criterio": 4,
+      "satisfeita": false,
+      "motivo": "terminou em CarrinhoComItens, esperado Pagamento"
+    }
+  ],
+  "nao_mapeados": {
+    "variaveis": [
+      "itens_no_carrinho"
+    ]
+  },
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 43.90002800000002,
+      "erro": "O modelo tem 2 erro(s):\n- [criterio_nao_coberto] O critério 4 não está representado em nenhuma transição.\n- [transicao_duplicada] As transições T3 e T5 são iguais (CarrinhoComItens --finalizar_compra--> Pagamento). Remova uma delas."
+    },
+    {
+      "resultado": "valido",
+      "duracao": 35.95421889999852,
+      "erro": ""
+    }
+  ],
+  "modelo": {
+    "analise": "Critério 1: um item no carrinho é suficiente para que ele não esteja vazio. Critério 2: remover o último item deixa o carrinho vazio. Critério 3: é necessário ao menos um item no carrinho para finalizar a compra. Critério 4: finalizar a compra leva à etapa de pagamento.",
+    "variaveis": [
+      {
+        "nome": "itens_no_carrinho",
+        "tipo": "inteiro",
+        "categoria": "estado",
+        "valor_inicial": 0
+      }
+    ],
+    "estados": [
+      {
+        "id": "CarrinhoVazio",
+        "rotulo": "Carrinho vazio",
+        "tipo": "inicial"
+      },
+      {
+        "id": "CarrinhoComItens",
+        "rotulo": "Carrinho com itens",
+        "tipo": "intermediario"
+      },
+      {
+        "id": "Pagamento",
+        "rotulo": "Etapa de pagamento",
+        "tipo": "final"
+      }
+    ],
+    "transicoes": [
+      {
+        "id": "T1",
+        "de": "CarrinhoVazio",
+        "evento": "adicionar_produto",
+        "para": "CarrinhoComItens",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          1
+        ]
+      },
+      {
+        "id": "T2",
+        "de": "CarrinhoComItens",
+        "evento": "remover_item",
+        "para": "CarrinhoVazio",
+        "guarda": null,
+        "acoes": [],
+        "criterios": [
+          2
+        ]
+      },
+      {
+        "id": "T3",
+        "de": "CarrinhoComItens",
+        "evento": "finalizar_compra",
+        "para": "Pagamento",
+        "guarda": "itens_no_carrinho > 0",
+        "acoes": [],
+        "criterios": [
+          3,
+          4
+        ]
+      },
+      {
+        "id": "T4",
+        "de": "CarrinhoVazio",
+        "evento": "finalizar_compra",
+        "para": "CarrinhoComItens",
+        "guarda": null,
+        "acoes": [],
+        "criterios": []
+      }
+    ]
+  }
+}

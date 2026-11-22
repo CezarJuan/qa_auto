@@ -1,0 +1,23 @@
+{
+  "nome": "Carrinho de Compras",
+  "historia": "Como cliente,\nQuero adicionar produtos ao carrinho e finalizar a compra,\nPara receber os produtos em casa.",
+  "criterios": "1. Adicionar um produto ao carrinho vazio deixa o carrinho com itens.\n2. Remover o último item deixa o carrinho vazio.\n3. Só é possível finalizar a compra com ao menos um item no carrinho.\n4. Finalizar a compra leva à etapa de pagamento.",
+  "modelo": {
+    "analise": "Critério 1: adicionar item ao carrinho vazio leva a CarrinhoComItens. Critério 2: remover quando itens == 1 esvazia o carrinho; com mais itens, o carrinho continua com itens. Critério 3: não há transição de finalizar a partir do carrinho vazio, e a finalização exige itens >= 1. Critério 4: finalizar leva ao pagamento. A variável de estado itens conta os produtos.",
+    "variaveis": [
+      {"nome": "itens", "tipo": "inteiro", "categoria": "estado", "valor_inicial": 0}
+    ],
+    "estados": [
+      {"id": "CarrinhoVazio", "rotulo": "Carrinho vazio", "tipo": "inicial"},
+      {"id": "CarrinhoComItens", "rotulo": "Carrinho com itens", "tipo": "intermediario"},
+      {"id": "Pagamento", "rotulo": "Pagamento", "tipo": "final"}
+    ],
+    "transicoes": [
+      {"id": "T1", "de": "CarrinhoVazio", "evento": "adicionar_item", "para": "CarrinhoComItens", "guarda": null, "acoes": ["itens += 1"], "criterios": [1]},
+      {"id": "T2", "de": "CarrinhoComItens", "evento": "adicionar_item", "para": "CarrinhoComItens", "guarda": null, "acoes": ["itens += 1"], "criterios": []},
+      {"id": "T3", "de": "CarrinhoComItens", "evento": "remover_item", "para": "CarrinhoComItens", "guarda": "itens > 1", "acoes": ["itens -= 1"], "criterios": []},
+      {"id": "T4", "de": "CarrinhoComItens", "evento": "remover_item", "para": "CarrinhoVazio", "guarda": "itens == 1", "acoes": ["itens -= 1"], "criterios": [2]},
+      {"id": "T5", "de": "CarrinhoComItens", "evento": "finalizar_compra", "para": "Pagamento", "guarda": "itens >= 1", "acoes": [], "criterios": [3, 4]}
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "caso": "emprestimo-biblioteca",
+  "conjunto": "teste",
+  "rodada": 1,
+  "valido": false,
+  "timeout": false,
+  "tentativas": 3,
+  "primeira_tentativa_valida": false,
+  "duracao_s": 151.29,
+  "precisao_estados": 0.0,
+  "recall_estados": 0.0,
+  "precisao_transicoes": 0.0,
+  "recall_transicoes": 0.0,
+  "propriedades": 0.0,
+  "erro": "Não foi possível obter um modelo válido após 3 tentativas. Último erro: O modelo tem 2 erro(s):\n- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3 e não multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = False as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T4 ('multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras.",
+  "detalhes_propriedades": [],
+  "nao_mapeados": {},
+  "historico": [
+    {
+      "resultado": "invalido",
+      "duracao": 44.055303000001004,
+      "erro": "O modelo tem 1 erro(s):\n- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3') e T4 ('multa_pendente') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 54.05327990000296,
+      "erro": "O modelo tem 3 erro(s):\n- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3') e T4 ('multa_pendente') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3') e T5 ('multa_pendente') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T4 ('multa_pendente') e T5 ('multa_pendente') no par LivroDisponivel / pegar_livro se sobrepõem: com multa_pendente = True as duas são verdadeiras."
+    },
+    {
+      "resultado": "invalido",
+      "duracao": 53.18161279999913,
+      "erro": "O modelo tem 2 erro(s):\n- [guardas_sobrepostas] As guardas de T1 ('livros_em_maos < 3 e não multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = False as duas são verdadeiras.\n- [guardas_sobrepostas] As guardas de T4 ('multa_pendente') e T5 ('livros_em_maos < 3') no par LivroDisponivel / pegar_livro se sobrepõem: com livros_em_maos = -1, multa_pendente = True as duas são verdadeiras."
+    }
+  ],
+  "modelo": null
+}

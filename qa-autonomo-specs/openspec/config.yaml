@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  Language: pt-BR
+  All artifacts must be written in pt-BR.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Projeto: QA Autônomo Baseado em Especificação (disciplina de PLN).
+  Objetivo: transformar histórias de usuário e critérios de aceite em português
+  em uma Máquina de Estados Finita (FSM) e, a partir dela, gerar testes BDD
+  (Gherkin) e scripts pytest-bdd por travessia determinística do grafo
+  (Model-Based Testing).
+
+  Princípio central: o LLM só extrai o modelo de estados. Caminhos, Gherkin,
+  Pytest e cobertura são gerados por código determinístico, nunca pelo LLM.
+
+  Stack: Python 3.10+, Streamlit (front), FastAPI/uvicorn (API /gerar e /saude),
+  Ollama local como provedor padrão (gratuito) e Gemini como alternativa,
+  Pydantic para esquemas, NetworkX para grafos, Mermaid stateDiagram-v2 para
+  visualização, SQLite + SQLAlchemy para persistência, pytest e pytest-bdd.
+
+  Exemplos canônicos do 5W2H: Saque em Caixa Eletrônico, Cupom Promocional em
+  E-commerce e Autenticação MFA com bloqueio após 3 tentativas. Exemplos já
+  existentes no código: Login e Carrinho.
+
+  Referências: 5W2H do projeto e relatório do explore em docs/.
+
+rules:
+  specs:
+    - Cada cenário deve poder virar um teste automatizado.
+    - Não citar nomes internos de classes ou funções nas specs.
+  tasks:
+    - Cada grupo entrega os próprios testes e documentação.
+    - Cada tarefa diz como verificar a conclusão.
